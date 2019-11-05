@@ -1,0 +1,10 @@
+/node/bower_components/
+/node/node_modules/
+/node/.pulp-cache/
+/node/output/
+/node/generated-docs/
+/node/.psc-package/
+/node/.psc*
+/node/.purs*
+/node/.psa*
+package-lock.json
