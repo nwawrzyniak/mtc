@@ -7,4 +7,3 @@
 /node/.psc*
 /node/.purs*
 /node/.psa*
-package-lock.json
