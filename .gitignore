@@ -7,3 +7,4 @@
 /node/.psc*
 /node/.purs*
 /node/.psa*
+/node/data/*

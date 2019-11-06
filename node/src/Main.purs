@@ -14,6 +14,7 @@ import Node.Process (lookupEnv)
 parseInt :: String -> Int
 parseInt str = fromMaybe 0 $ fromString str
 
+
 app :: App
 app = get "/" $ send "Hello, World!"
 
