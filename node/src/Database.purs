@@ -10,18 +10,34 @@ import Simple.JSON (writeImpl)
 
 import Types
 
+type ParamedQuery param = { query :: Query, params :: Record param }
+type PrepedDb = forall param. ParamedQuery param -> Aff Foreign
+
+prepareDb :: DBConnection -> PrepedDb
+prepareDb db { query, params } = queryObjectDB db query params
+
+sqlRemoveOldMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int )
+sqlRemoveOldMessages t = { query: "DELETE FROM `msg` WHERE `timestamp` < $timestamp;"
+                         , params: { "$timestamp": unTimestamp t }
+                         }
+
+sqlGetMessages :: ParamedQuery ()
+sqlGetMessages = { query: "SELECT `msg`, `timestamp` FROM `msg`;"
+                 , params: {}
+                 }
+
+sqlGetNewerMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int )
+sqlGetNewerMessages t = { query: "SELECT `msg`, `timestamp` FROM `msg` WHERE `timestamp` >= $timestamp;"
+                        , params: { "$timestamp": unTimestamp t }
+                        }
 
 
-timestamptToStr :: Timestamp -> String
-timestamptToStr = show <<< unTimestamp
-
-sqlRemoveOldMessages :: Timestamp -> Query
-sqlRemoveOldMessages ts = "DELETE FROM `msg` WHERE `timestamp` < '" 
-                       <> timestamptToStr ts
-                       <> "';"
-
-sqlGetMessages :: Query
-sqlGetMessages = "SELECT `msg`, `timestamp` FROM `msg`;"
+sqlInsertMessage ::  Msg -> ParamedQuery ( "$msg" :: String, "$timestamp" :: Int)
+sqlInsertMessage msg = { query: "INSERT INTO `msg` (`msg`, `timestamp`) VALUES ($msg, $timestamp);"
+                       , params: { "$msg": msg.msg
+                                 , "$timestamp": unTimestamp msg.timestamp
+                                 }
+                       }
 
 sqlCreateTableIfNotExists :: Query
 sqlCreateTableIfNotExists =
@@ -31,12 +47,3 @@ CREATE TABLE IF NOT EXISTS `msg`
   , `timestamp` int
   );
     """
-
-sqlInsertMessage :: Query
-sqlInsertMessage = "INSERT INTO `msg` (`msg`, `timestamp`) VALUES ($msg, $timestamp);"
-
-insertMessage :: DBConnection -> Msg -> Aff Foreign
-insertMessage db msg = queryObjectDB db sqlInsertMessage 
-                           { "$msg": msg.msg
-                           , "$timestamp": unTimestamp msg.timestamp
-                           }

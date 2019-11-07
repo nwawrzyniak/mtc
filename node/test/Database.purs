@@ -32,6 +32,8 @@ main = launchAff_ do
   (flip when) (unlink testPath) =<< exists testPath
   db <- newDB testPath
   _ <- queryDB db sqlCreateTableIfNotExists []
+  
+  let prepedDb = prepareDb db
 
 
   liftEffect $ runTest do
@@ -42,8 +44,8 @@ main = launchAff_ do
         
       test "we can insert rows and retrieve them" do
         let message = {msg: testMsg, timestamp: testTime }
-        _ <- insertMessage db message
-        results <- read <$> queryDB db sqlGetMessages []
+        _ <- prepedDb $ sqlInsertMessage message
+        results <- read <$> prepedDb sqlGetMessages
         case results of
           Right (as :: Array Msg) ->
             for_ as \(a) -> do
