@@ -7,7 +7,7 @@ import Data.Foldable (for_)
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
-import Node.FS.Aff (exists, unlink)
+import Node.FS.Aff (exists, unlink, mkdir)
 import SQLite3 (closeDB, newDB, queryDB, queryObjectDB)
 import Simple.JSON (read)
 import Test.Unit (failure, suite, test)
@@ -28,7 +28,9 @@ testMsg = "test message"
 
 main :: Effect Unit
 main = launchAff_ do
-  let testPath = "./data/test.sqlite3"
+  let testFolder = "./data/"
+      testPath = testFolder <> "test.sqlite3"
+  (flip unless) (mkdir testFolder) =<< exists testFolder 
   (flip when) (unlink testPath) =<< exists testPath
   db <- newDB testPath
   _ <- queryDB db sqlCreateTableIfNotExists []
