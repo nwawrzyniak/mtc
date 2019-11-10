@@ -1,22 +1,21 @@
 module Test.Database where
 
 import Prelude hiding (apply)
-
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
 import Node.FS.Aff (exists, unlink, mkdir)
-import SQLite3 (closeDB, newDB, queryDB, queryObjectDB)
+import SQLite3 (closeDB, newDB)
 import Simple.JSON (read)
 import Test.Unit (failure, suite, test)
 import Test.Unit.Assert (assert, equal)
 import Test.Unit.Main (runTest)
 
 
-import Types
-import Database
+import Types (Msg, Timestamp(..))
+import Database (prepareDb, sqlCreateTableIfNotExists, sqlGetMessages, sqlInsertMessage)
 
 
 
@@ -33,9 +32,10 @@ main = launchAff_ do
   (flip unless) (mkdir testFolder) =<< exists testFolder 
   (flip when) (unlink testPath) =<< exists testPath
   db <- newDB testPath
-  _ <- queryDB db sqlCreateTableIfNotExists []
-  
   let prepedDb = prepareDb db
+  
+  _ <- prepedDb sqlCreateTableIfNotExists
+  
 
 
   liftEffect $ runTest do

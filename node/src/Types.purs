@@ -1,24 +1,19 @@
-module Types where
+module Types (Timestamp(..), Msg(..)) where
 
 import Prelude hiding (apply)
-import Data.Maybe (Maybe(..))
-import Foreign (ForeignError(..), fail)
-import Data.DateTime.Instant (Instant, instant)
-import Data.Time.Duration (Milliseconds(..))
+import Data.Newtype (class Newtype)
 import Simple.JSON (class ReadForeign, readImpl)
 
 newtype Timestamp = Timestamp Int
 
 derive instance eqTimestamp :: Eq Timestamp
+derive instance newtypeTimestamp :: Newtype Timestamp _
 instance showTimestamp :: Show Timestamp where
   show (Timestamp t) = "Timestamp " <> show t
 
 type Msg = { msg       :: String
            , timestamp :: Timestamp
            }
-
-unTimestamp :: Timestamp -> Int
-unTimestamp (Timestamp t) = t
 
 
 instance readMsg :: ReadForeign Timestamp where

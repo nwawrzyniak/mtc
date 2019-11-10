@@ -1,12 +1,10 @@
-module Database where
+module Database (prepareDb, sqlRemoveOldMessages, sqlGetMessages, sqlGetNewerMessages
+                , sqlInsertMessage, sqlCreateTableIfNotExists) where
 
-import Prelude hiding (apply)
-import Data.DateTime.Instant (Instant, unInstant)
-import Data.Time.Duration (Milliseconds(..))
-import Foreign (Foreign, unsafeToForeign)
+import Data.Newtype (unwrap)
+import Foreign (Foreign)
 import Effect.Aff (Aff)
 import SQLite3 (DBConnection, Query, queryObjectDB)
-import Simple.JSON (writeImpl)
 
 import Types
 
@@ -18,7 +16,7 @@ prepareDb db { query, params } = queryObjectDB db query params
 
 sqlRemoveOldMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int )
 sqlRemoveOldMessages t = { query: "DELETE FROM `msg` WHERE `timestamp` < $timestamp;"
-                         , params: { "$timestamp": unTimestamp t }
+                         , params: { "$timestamp": unwrap t }
                          }
 
 sqlGetMessages :: ParamedQuery ()
@@ -28,22 +26,19 @@ sqlGetMessages = { query: "SELECT `msg`, `timestamp` FROM `msg`;"
 
 sqlGetNewerMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int )
 sqlGetNewerMessages t = { query: "SELECT `msg`, `timestamp` FROM `msg` WHERE `timestamp` >= $timestamp;"
-                        , params: { "$timestamp": unTimestamp t }
+                        , params: { "$timestamp": unwrap t }
                         }
 
 
 sqlInsertMessage ::  Msg -> ParamedQuery ( "$msg" :: String, "$timestamp" :: Int)
 sqlInsertMessage msg = { query: "INSERT INTO `msg` (`msg`, `timestamp`) VALUES ($msg, $timestamp);"
                        , params: { "$msg": msg.msg
-                                 , "$timestamp": unTimestamp msg.timestamp
+                                 , "$timestamp": unwrap msg.timestamp
                                  }
                        }
 
-sqlCreateTableIfNotExists :: Query
+sqlCreateTableIfNotExists :: ParamedQuery ()
 sqlCreateTableIfNotExists =
-    """
-CREATE TABLE IF NOT EXISTS `msg`
-  ( `msg` text
-  , `timestamp` int
-  );
-    """
+  { query: "CREATE TABLE IF NOT EXISTS `msg`( `msg` text, `timestamp` int);"
+  , params: {}
+  }
