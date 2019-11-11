@@ -1,4 +1,4 @@
-module Types (Timestamp(..), Msg(..)) where
+module Types (Timestamp(..), Msg(..), RawMsg) where
 
 import Prelude hiding (apply)
 import Data.Newtype (class Newtype)
@@ -11,15 +11,21 @@ derive instance newtypeTimestamp :: Newtype Timestamp _
 instance showTimestamp :: Show Timestamp where
   show (Timestamp t) = "Timestamp " <> show t
 
+instance readTs :: ReadForeign Timestamp where
+  readImpl a = do
+    b <- readImpl a
+    pure $ Timestamp b
+
+
 type Msg = { msg       :: String
            , timestamp :: Timestamp
            }
 
 
-instance readMsg :: ReadForeign Timestamp where
-  readImpl a = do
-    b <- readImpl a
-    pure $ Timestamp b
+
+
+
+type RawMsg = {"msg" :: String }
 
 {-
 instance readMsg :: ReadForeign Msg where
