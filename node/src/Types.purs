@@ -1,7 +1,9 @@
-module Types (Timestamp(..), Msg(..), RawMsg) where
+module Types (Timestamp(..), instantToTimestamp, Msg(..), RawMsg) where
 
 import Prelude hiding (apply)
-import Data.Newtype (class Newtype)
+import Data.Int (floor)
+import Data.Newtype (class Newtype, wrap, unwrap)
+import Data.DateTime.Instant (Instant, unInstant)
 import Simple.JSON (class ReadForeign, readImpl)
 
 newtype Timestamp = Timestamp Int
@@ -16,6 +18,8 @@ instance readTs :: ReadForeign Timestamp where
     b <- readImpl a
     pure $ Timestamp b
 
+instantToTimestamp :: Instant -> Timestamp
+instantToTimestamp = wrap <<< floor <<< (flip div 1000.0) <<< unwrap <<< unInstant
 
 type Msg = { msg       :: String
            , timestamp :: Timestamp

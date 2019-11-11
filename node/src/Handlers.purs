@@ -19,8 +19,8 @@ import Effect.Now (now)
 import Middleware.Middleware as Middleware
 
 
+import Types (RawMsg, instantToTimestamp)
 import Database (prepareDb, sqlGetMessages, sqlInsertMessage)
-import Types (RawMsg)
 
 errorHandler :: Error -> Handler
 errorHandler err = do
@@ -38,12 +38,11 @@ addMessageHandler db = do
     body <- getBody
     case runExcept body of
       Right ({"msg": msg} :: RawMsg) -> do
-          ts <- liftEffect $ convert <$> now
+          ts <- liftEffect $ instantToTimestamp <$> now
           _ <- liftAff $ db' $ sqlInsertMessage {msg: msg, timestamp: ts}
           sendJson {success: "true"}
       Left e -> throwError $ error $ show e
   where db' = prepareDb db
-        convert = wrap <<< round <<< unwrap <<< unInstant
 
 parseBody :: Handler
 parseBody = getRequestHeader "Content-Type" >>= case _ of

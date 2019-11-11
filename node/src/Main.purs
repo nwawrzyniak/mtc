@@ -2,11 +2,10 @@ module Main where
 
 import Prelude hiding (apply)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Int (fromString, round)
+import Data.Int (fromString)
 import Data.DateTime (adjust)
-import Data.DateTime.Instant (unInstant, fromDateTime, toDateTime)
+import Data.DateTime.Instant (fromDateTime, toDateTime)
 import Data.Time.Duration (Days(..))
-import Data.Newtype (wrap, unwrap)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
@@ -20,6 +19,8 @@ import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
 import Node.Process (lookupEnv)
 import SQLite3 (DBConnection, newDB)
+
+import Types (instantToTimestamp)
 import Database (prepareDb, sqlCreateTableIfNotExists, sqlRemoveOldMessages)
 import Handlers (errorHandler)
 
@@ -51,14 +52,13 @@ removeOldMsg :: DBConnection -> Effect Unit
 removeOldMsg db = do
   let db' = prepareDb db
   mts <-  shift <$> now
-  case convert <$> mts of
+  case instantToTimestamp <$> mts of
     Just ts -> do
-        log $ "Clearing old msg's at '" <> show ts <> "'"
+        log $ "Clearing old msg's before '" <> show ts <> "'"
         launchAff_ $ db' $ sqlRemoveOldMessages ts
     Nothing ->
         log "Unable to compute Timestamp"
-  where convert = wrap <<< round <<< unwrap <<< unInstant
-        shift = map fromDateTime <<< adjust (Days 7.0) <<< toDateTime
+  where shift = map fromDateTime <<< adjust (Days (-7.0)) <<< toDateTime
 
 main :: Effect Server
 main = do
