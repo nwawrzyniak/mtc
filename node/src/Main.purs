@@ -13,7 +13,7 @@ import Effect.Aff (Aff, Fiber, launchAff, launchAff_)
 import Effect.Timer (setInterval)
 import Effect.Now (now)
 import Node.FS.Aff (exists, mkdir)
-import Node.Express.App (App, listenHttp, get, post, useOnError)
+import Node.Express.App (App, listenHttp, get, post, useOnError, useAt)
 import Node.Express.Response (send)
 import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
@@ -22,7 +22,7 @@ import SQLite3 (DBConnection, newDB)
 
 import Types (instantToTimestamp)
 import Database (prepareDb, sqlCreateTableIfNotExists, sqlRemoveOldMessages)
-import Handlers (errorHandler, getMessagesHandler, addMessageHandler)
+import Handlers (errorHandler, getMessagesHandler, addMessageHandler, parseBody)
 
 
 parseInt :: String -> Int
@@ -32,13 +32,14 @@ parseInt str = fromMaybe 0 $ fromString str
 app :: DBConnection -> App
 app db = do
     let static' = static "./static/"
-    get  "/"          $ static'
-    get  "/style.css" $ static'
-    get  "/main.js"   $ static'
-    get  "/api/get"   $ getMessagesHandler db
-    post "/api/msg"   $ addMessageHandler  db
-    get  "/hello"     $ send "Hello, World!"
-    useOnError       $ errorHandler
+    get   "/"          $ static'
+    get   "/style.css" $ static'
+    get   "/main.js"   $ static'
+    get   "/api/get"   $ getMessagesHandler db
+    useAt "/api/msg"   $ parseBody
+    post  "/api/msg"   $ addMessageHandler  db
+    get   "/hello"     $ send "Hello, World!"
+    useOnError         $ errorHandler
 
 
 initDB :: Aff DBConnection

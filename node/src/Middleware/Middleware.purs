@@ -1,4 +1,4 @@
-module Middleware.Middleware (json, urlencoded, debugLog) where
+module Middleware.Middleware (json, urlencoded) where
 
 import Effect (Effect)
 import Effect.Class (liftEffect)
@@ -11,7 +11,6 @@ import Prelude (($))
 
 foreign import _json       :: Fn3 Request Response (Effect Unit) (Effect Unit)
 foreign import _urlencoded :: Fn3 Request Response (Effect Unit) (Effect Unit)
-foreign import _debugLog   :: Fn3 Request Response (Effect Unit) (Effect Unit)
 
 -- | Handler that uses builtin 'json' middleware to parse req.body
 json :: Handler
@@ -22,7 +21,3 @@ json = HandlerM $
 urlencoded :: Handler
 urlencoded = HandlerM $
   \req res nxt -> liftEffect $ runFn3 _urlencoded req res nxt
-
-debugLog :: Handler
-debugLog = HandlerM $
-  \req res nxt -> liftEffect $ runFn3 _debugLog req res nxt

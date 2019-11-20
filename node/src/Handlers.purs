@@ -3,23 +3,17 @@ module Handlers where
 import Prelude hiding (apply)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
-import Data.Unit (unit)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Effect.Class (liftEffect)
 import Effect.Exception (Error, message, error)
 import Effect.Aff.Class (liftAff)
-import Node.Express.Request (getRequestHeader, getBody, getBody')
+import Node.Express.Request (getRequestHeader, getBody)
 import Node.Express.Response (sendJson, setStatus)
 import Node.Express.Handler (Handler)
 import SQLite3 (DBConnection)
 import Effect.Now (now)
-import Foreign (F, tagOf, typeOf)
 import Middleware.Middleware as Middleware
-
-
-import Effect.Console (log)
-
 
 import Types (RawMsg, instantToTimestamp)
 import Database (prepareDb, sqlGetMessages, sqlInsertMessage)
@@ -36,14 +30,7 @@ getMessagesHandler db = do
 
 addMessageHandler :: DBConnection -> Handler
 addMessageHandler db = do
-    unit <- parseBody
-    Middleware.debugLog
-    (body :: F RawMsg) <- getBody
-    b' <- getBody'
-    liftEffect do
-        log $ show $ runExcept body
-        log $ tagOf b'
-        log $ typeOf b'
+    body <- getBody
     case runExcept body of
       Right ({"msg": msg} :: RawMsg) -> do
           ts <- liftEffect $ instantToTimestamp <$> now
