@@ -26,7 +26,8 @@ errorHandler err = do
 getMessagesHandler :: DBConnection -> Handler
 getMessagesHandler db = do
   let db' = prepareDb db
-  sendJson $ db' sqlGetMessages
+  msgs <- liftAff $ db' sqlGetMessages
+  sendJson msgs
 
 addMessageHandler :: DBConnection -> Handler
 addMessageHandler db = do
