@@ -35,6 +35,7 @@ app db = do
     get   "/"          $ static'
     get   "/style.css" $ static'
     get   "/main.js"   $ static'
+    get   "/test.js"   $ static'
     get   "/api/get"   $ getMessagesHandler db
     useAt "/api/msg"   $ parseBody
     post  "/api/msg"   $ addMessageHandler  db
