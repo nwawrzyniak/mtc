@@ -2459,7 +2459,7 @@ var PS = {};
       if (v instanceof POST) {
           return "post";
       };
-      throw new Error("Failed pattern match at SimpleJquery.SimpleJquery (line 44, column 1 - line 44, column 39): " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at SimpleJquery.SimpleJquery (line 46, column 1 - line 46, column 39): " + [ v.constructor.name ]);
   };
   var ajax = function (url) {
       return function (method) {
@@ -2478,7 +2478,7 @@ var PS = {};
                           method: methodToString(method)
                       })(cb);
                   };
-                  throw new Error("Failed pattern match at SimpleJquery.SimpleJquery (line 28, column 1 - line 33, column 20): " + [ url.constructor.name, method.constructor.name, v.constructor.name, cb.constructor.name ]);
+                  throw new Error("Failed pattern match at SimpleJquery.SimpleJquery (line 30, column 1 - line 35, column 20): " + [ url.constructor.name, method.constructor.name, v.constructor.name, cb.constructor.name ]);
               };
           };
       };
@@ -2567,7 +2567,7 @@ var PS = {};
   var Types = $PS["Types"];                
   var nl2brRegex = Data_String_Regex_Unsafe.unsafeRegex("(\x0d\x0a|\x0a\x0d|\x0d|\x0a)")(Data_String_Regex_Flags.global);
   var nl2br = Data_String_Regex.replace(nl2brRegex)("<br>$1");
-  var loadMsgs$prime = function (mData) {
+  var loadMsgs = function (mData) {
       return function (cb) {
           var method = (function () {
               if (mData instanceof Data_Maybe.Just) {
@@ -2576,7 +2576,7 @@ var PS = {};
               if (mData instanceof Data_Maybe.Nothing) {
                   return SimpleJquery_SimpleJquery.GET.value;
               };
-              throw new Error("Failed pattern match at FrontendMain (line 101, column 16 - line 103, column 29): " + [ mData.constructor.name ]);
+              throw new Error("Failed pattern match at FrontendMain (line 112, column 16 - line 114, column 29): " + [ mData.constructor.name ]);
           })();
           return SimpleJquery_SimpleJquery.ajax("/api/get")(method)(mData)(function (a) {
               var v = Simple_JSON.read(Simple_JSON.readArray(Simple_JSON.readRecord()(Simple_JSON.readFieldsCons(new Data_Symbol.IsSymbol(function () {
@@ -2590,7 +2590,7 @@ var PS = {};
               if (v instanceof Data_Either.Left) {
                   return Effect_Console.log("deserialize failed: " + Data_Show.show(Data_List_Types.showNonEmptyList(Foreign.showForeignError))(v.value0));
               };
-              throw new Error("Failed pattern match at FrontendMain (line 105, column 5 - line 107, column 55): " + [ v.constructor.name ]);
+              throw new Error("Failed pattern match at FrontendMain (line 116, column 5 - line 118, column 55): " + [ v.constructor.name ]);
           });
       };
   };
@@ -2630,13 +2630,13 @@ var PS = {};
                               if (Data_Boolean.otherwise) {
                                   return Data_Unit.unit;
                               };
-                              throw new Error("Failed pattern match at FrontendMain (line 52, column 9 - line 54, column 48): " + [ Data_Unit.unit.constructor.name ]);
+                              throw new Error("Failed pattern match at FrontendMain (line 58, column 9 - line 60, column 48): " + [ Data_Unit.unit.constructor.name ]);
                           };
                       };
                       if (v1 instanceof Data_Either.Left) {
                           return Effect_Console.log("deserialize failed: " + Data_Show.show(Data_List_Types.showNonEmptyList(Foreign.showForeignError))(v1.value0));
                       };
-                      throw new Error("Failed pattern match at FrontendMain (line 49, column 5 - line 55, column 55): " + [ v1.constructor.name ]);
+                      throw new Error("Failed pattern match at FrontendMain (line 55, column 5 - line 61, column 55): " + [ v1.constructor.name ]);
                   })();
               };
           };
@@ -2657,9 +2657,8 @@ var PS = {};
       return function (msgTpl) {
           var act = function (refTs) {
               return function __do() {
-                  Effect_Console.log("next")();
                   var v = Effect_Ref.read(refTs)();
-                  return loadMsgs$prime(new Data_Maybe.Just({
+                  return loadMsgs(new Data_Maybe.Just({
                       timestamp: Data_Show.show(Data_Show.showInt)(v)
                   }))(function (msgs) {
                       return function __do() {
@@ -2672,7 +2671,6 @@ var PS = {};
               };
           };
           return function __do() {
-              Effect_Console.log("start")();
               var v = Data_Functor.map(Effect.functorEffect)(Data_Functor.map(Data_Functor.functorFn)(Data_Newtype.unwrap(Types.newtypeTimestamp))(Types.instantToTimestamp))(Effect_Now.now)();
               var v1 = Effect_Ref["new"](v)();
               var v2 = Effect_Timer.setTimeout(1000)(act(v1))();
@@ -2685,7 +2683,7 @@ var PS = {};
           return function __do() {
               JQuery.clear(container)();
               JQuery.setText("Loading messages")(container)();
-              return loadMsgs$prime(Data_Maybe.Nothing.value)(function (msgs) {
+              return loadMsgs(Data_Maybe.Nothing.value)(function (msgs) {
                   return function __do() {
                       JQuery.clear(container)();
                       var v = Data_Function.flip(Data_Traversable.traverse(Data_Traversable.traversableArray)(Effect.applicativeEffect))(msgs)(addMsgJq(container)(msgTpl))();
@@ -2712,7 +2710,7 @@ var PS = {};
   exports["addMsgJq"] = addMsgJq;
   exports["initialLoadMsgs"] = initialLoadMsgs;
   exports["loadMsgCronJob"] = loadMsgCronJob;
-  exports["loadMsgs'"] = loadMsgs$prime;
+  exports["loadMsgs"] = loadMsgs;
 })(PS);
 PS["FrontendMain"].main();
 },{}]},{},[1]);

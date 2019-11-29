@@ -8,7 +8,6 @@ import Node.Express.Handler (Handler, HandlerM(..))
 import Node.Express.Types (Request, Response)
 import Prelude (($))
 
-
 foreign import _json       :: Fn3 Request Response (Effect Unit) (Effect Unit)
 foreign import _urlencoded :: Fn3 Request Response (Effect Unit) (Effect Unit)
 

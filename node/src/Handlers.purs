@@ -19,22 +19,27 @@ import Node.Express.Types (Method (POST))
 import SQLite3 (DBConnection)
 import Effect.Now (now)
 import Middleware.Middleware as Middleware
-
 import Types (Timestamp(..), RawTimestamp, RawMsg, instantToTimestamp, opSucceded, opFailed)
 import Database (prepareDb, sqlGetMessages, sqlInsertMessage
                 , sqlGetNewerMessages)
 
+-- | `Handler` to respond with 400 and the produced error
 errorHandler :: Error -> Handler
 errorHandler err = do
   setStatus 400
   sendJson {error: message err}
 
+-- | `Handler` which responds with all messages in the database in json format
 getMessagesHandler :: DBConnection -> Handler
 getMessagesHandler db = do
   let db' = prepareDb db
   msgs <- liftAff $ db' sqlGetMessages
   sendJson msgs
 
+-- | `Handler` which responds with new messages.
+-- | This handler tries to extract the `RawTimestamp` from the request body
+-- | or fails with `opFailed`. If successful it responds with all messages
+-- | after given timestamp
 getNewerMessagesHandler :: DBConnection -> Handler
 getNewerMessagesHandler db = do
   let db' = prepareDb db
@@ -52,7 +57,10 @@ getNewerMessagesHandler db = do
       liftEffect $ log $ show e
       sendJson opFailed
 
-
+-- | `Handler` which adds a message to the database.
+-- | It tries to extract the `RawMsg` from the request body, failing with
+-- | `opFailed` if unsuccessful, else it adds the message with the current
+-- | timestamp to the database responding `opSuccess`
 addMessageHandler :: DBConnection -> Handler
 addMessageHandler db = do
     body <- getBody
@@ -66,6 +74,8 @@ addMessageHandler db = do
           sendJson opFailed
   where db' = prepareDb db
 
+-- | Middleware (see expressjs) to parse the body of a post request depending on
+-- | the requests `Content-Type` header
 parseBody :: Handler
 parseBody = do
   getMethod >>= case _ of

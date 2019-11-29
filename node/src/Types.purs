@@ -15,11 +15,13 @@ import Data.DateTime.Instant (Instant, unInstant)
 import Simple.JSON ( class ReadForeign , readImpl
                    , class WriteForeign, writeImpl
                    )
-
+-- | Newtype wrapper for `Int` representing a Unix-timestamp
 newtype Timestamp = Timestamp Int
 
 derive instance eqTimestamp :: Eq Timestamp
+
 derive instance newtypeTimestamp :: Newtype Timestamp _
+
 instance showTimestamp :: Show Timestamp where
   show (Timestamp t) = "Timestamp " <> show t
 
@@ -31,32 +33,32 @@ instance readTs :: ReadForeign Timestamp where
 instance writeTs :: WriteForeign Timestamp where
   writeImpl (Timestamp a) = writeImpl a
 
+-- | Transforms an `Instant` to a `Timestamp`
 instantToTimestamp :: Instant -> Timestamp
 instantToTimestamp = wrap <<< floor <<< (flip div 1000.0) <<< unwrap <<< unInstant
 
+-- | Representation of a raw timestamp.
+-- | This is easily communicatable via http/xhr/json
 type RawTimestamp = { timestamp :: String }
 
+-- | Representation of a message, holding the message and the time the message
+-- | was written
 type Msg = { msg       :: String
            , timestamp :: Timestamp
            }
 
+-- | Representation of a raw message.
+-- | This is easily communicatable via http/xhr/json
 type RawMsg = { msg :: String }
 
+-- | Representation of the outcome of an operation.
+-- | This is easily communicatable via http/xhr/json
 type OperationStatus = { success :: Boolean}
 
+-- | Represents success of an operation
 opSucceded :: OperationStatus
 opSucceded = {success: true}
 
+-- | Represents failure of an operation
 opFailed :: OperationStatus
 opFailed = {success: false}
-
-{-
-instance readMsg :: ReadForeign Msg where
-  readImpl = do
-    s <- readImpl
-    (i :: Number) <- readImpl
-    case (instant $ Milliseconds i) of
-      Just is -> pure $ Msg {msg: s, inst: Milliseconds is}
-      Nothing -> fail $ ForeignError "could not read foreign timestamp"
-
--}

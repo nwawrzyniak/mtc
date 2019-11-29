@@ -8,7 +8,6 @@ module SimpleJquery.SimpleJquery
   , ajax
   ) where
 
-
 import Prelude hiding (apply)
 import JQuery (JQuery, JQueryEvent)
 import Effect (Effect)
@@ -25,6 +24,9 @@ foreign import isShiftDown :: JQueryEvent -> Effect Boolean
 foreign import serialize :: JQuery -> Effect String
 foreign import _ajax :: forall a b. a -> b -> Effect Unit
 
+-- | Simple wrapper for '_native_' jQuery.ajax call
+-- | This takes a URL, Http method, data if desired and a callback which is
+-- | passed to jQuery as the `success` method
 ajax :: forall a.
         URL
      -> HTTPMethod
