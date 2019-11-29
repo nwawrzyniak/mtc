@@ -37,9 +37,9 @@ app db = do
     get   "/style.css" $ static'
     get   "/main.js"   $ static'
     get   "/test.js"   $ static'
+    useAt "/api/get"   $ parseBody
     get   "/api/get"   $ getMessagesHandler db
-    useAt "/api/getn"  $ parseBody
-    get   "/api/getn"  $ getNewerMessagesHandler db
+    post  "/api/get"   $ getNewerMessagesHandler db
     useAt "/api/msg"   $ parseBody
     post  "/api/msg"   $ addMessageHandler  db
     get   "/hello"     $ send "Hello, World!"

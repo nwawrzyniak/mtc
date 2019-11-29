@@ -1,4 +1,5 @@
 module Types ( Timestamp(..)
+             , RawTimestamp
              , Msg(..)
              , RawMsg
              , OperationStatus
@@ -33,17 +34,15 @@ instance writeTs :: WriteForeign Timestamp where
 instantToTimestamp :: Instant -> Timestamp
 instantToTimestamp = wrap <<< floor <<< (flip div 1000.0) <<< unwrap <<< unInstant
 
+type RawTimestamp = { timestamp :: String }
+
 type Msg = { msg       :: String
            , timestamp :: Timestamp
            }
 
+type RawMsg = { msg :: String }
 
-
-
-
-type RawMsg = {"msg" :: String }
-
-type OperationStatus = {"success" :: Boolean}
+type OperationStatus = { success :: Boolean}
 
 opSucceded :: OperationStatus
 opSucceded = {success: true}
