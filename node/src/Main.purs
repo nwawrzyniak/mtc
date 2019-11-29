@@ -22,7 +22,8 @@ import SQLite3 (DBConnection, newDB)
 
 import Types (instantToTimestamp)
 import Database (prepareDb, sqlCreateTableIfNotExists, sqlRemoveOldMessages)
-import Handlers (errorHandler, getMessagesHandler, addMessageHandler, parseBody)
+import Handlers ( errorHandler, getMessagesHandler, addMessageHandler
+                , getNewerMessagesHandler, parseBody)
 
 
 parseInt :: String -> Int
@@ -37,6 +38,8 @@ app db = do
     get   "/main.js"   $ static'
     get   "/test.js"   $ static'
     get   "/api/get"   $ getMessagesHandler db
+    useAt "/api/getn"  $ parseBody
+    get   "/api/getn"  $ getNewerMessagesHandler db
     useAt "/api/msg"   $ parseBody
     post  "/api/msg"   $ addMessageHandler  db
     get   "/hello"     $ send "Hello, World!"

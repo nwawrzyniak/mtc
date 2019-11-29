@@ -11,7 +11,9 @@ import Prelude hiding (apply)
 import Data.Int (floor)
 import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.DateTime.Instant (Instant, unInstant)
-import Simple.JSON (class ReadForeign, readImpl)
+import Simple.JSON ( class ReadForeign , readImpl
+                   , class WriteForeign, writeImpl
+                   )
 
 newtype Timestamp = Timestamp Int
 
@@ -24,6 +26,9 @@ instance readTs :: ReadForeign Timestamp where
   readImpl a = do
     b <- readImpl a
     pure $ Timestamp b
+
+instance writeTs :: WriteForeign Timestamp where
+  writeImpl (Timestamp a) = writeImpl a
 
 instantToTimestamp :: Instant -> Timestamp
 instantToTimestamp = wrap <<< floor <<< (flip div 1000.0) <<< unwrap <<< unInstant

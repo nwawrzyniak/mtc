@@ -1,4 +1,6 @@
-module Handlers where
+module Handlers ( errorHandler, getMessagesHandler, getNewerMessagesHandler
+                , addMessageHandler, parseBody 
+                ) where
 
 import Prelude hiding (apply)
 import Data.Maybe (Maybe(..))
@@ -16,8 +18,9 @@ import SQLite3 (DBConnection)
 import Effect.Now (now)
 import Middleware.Middleware as Middleware
 
-import Types (RawMsg, instantToTimestamp, opSucceded, opFailed)
-import Database (prepareDb, sqlGetMessages, sqlInsertMessage)
+import Types (Timestamp(..), RawMsg, instantToTimestamp, opSucceded, opFailed)
+import Database (prepareDb, sqlGetMessages, sqlInsertMessage
+                , sqlGetNewerMessages)
 
 errorHandler :: Error -> Handler
 errorHandler err = do
@@ -29,6 +32,19 @@ getMessagesHandler db = do
   let db' = prepareDb db
   msgs <- liftAff $ db' sqlGetMessages
   sendJson msgs
+
+getNewerMessagesHandler :: DBConnection -> Handler
+getNewerMessagesHandler db = do
+  let db' = prepareDb db
+  body <- getBody
+  case runExcept body of
+    Right (ts :: Int) -> do
+      msgs <- liftAff $ db' $ sqlGetNewerMessages $ Timestamp ts
+      sendJson msgs
+    Left e -> do
+      liftEffect $ log $ show e
+      sendJson opFailed
+
 
 addMessageHandler :: DBConnection -> Handler
 addMessageHandler db = do
