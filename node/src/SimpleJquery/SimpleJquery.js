@@ -27,7 +27,12 @@ exports.serialize = function(ob) {
 }
 
 exports._ajax = function(settings) {
-  return function() {
-    return JQuery.ajax(settings)
+  return function(cb) {
+    return function() {
+      settings.success = function (a) {
+        return cb(a)();
+      }
+      return jQuery.ajax(settings);
+    }
   }
 }

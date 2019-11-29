@@ -23,7 +23,7 @@ foreign import trigger :: String -> JQuery -> Effect Unit
 foreign import getKeycode :: JQueryEvent -> Effect Int
 foreign import isShiftDown :: JQueryEvent -> Effect Boolean
 foreign import serialize :: JQuery -> Effect String
-foreign import _ajax :: forall a. a -> Effect Unit
+foreign import _ajax :: forall a b. a -> b -> Effect Unit
 
 ajax :: forall a.
         URL
@@ -35,13 +35,11 @@ ajax url method (Just datum) cb =
   _ajax  { url: url
          , method: methodToString method
          , data: datum
-         , success: cb
-         }
+         } cb
 ajax url method Nothing cb =
   _ajax  { url: url
          , method: methodToString method
-         , success: cb
-         }
+         } cb
 
 methodToString :: HTTPMethod -> String
 methodToString GET  = "get"

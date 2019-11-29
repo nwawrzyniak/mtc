@@ -1,21 +1,17 @@
 module FrontendMain where
 
-import Prelude hiding (apply)
+import Prelude hiding (apply, append)
 import Effect (Effect)
 import Effect.Console (log)
---import Effect.Class (liftEffect)
-import JQuery (JQuery, JQueryEvent, ready, select, on, preventDefault)
---import Affjax as AX
---import Affjax.ResponseFormat as ResponseFormat
---import Affjax.RequestBody as RequestBody
+import JQuery (JQuery, JQueryEvent, ready, select, on, preventDefault, create
+              , clear, clone, append, setHtml, setText, setProp, setValue)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
---import Effect.Aff (launchAff_)
+import Data.Traversable (traverse)
 import SimpleJquery.SimpleJquery (HTTPMethod(..), ajax, getKeycode, isShiftDown
                                   , serialize, trigger)
 import Simple.JSON (read)
 import Types (Msg, opSucceded)
-
 
 
 main :: Effect Unit
@@ -23,8 +19,10 @@ main = ready do
   container <- select "#msgs"
   form      <- select "#form"
   textarea  <- select "#msgfield"
+  msgTpl    <- create "<div class='msg'></div>"
   on "keypress" (handleKeypress form) textarea
   on "submit" (handleFormSubmit textarea) form
+  initialLoadMsgs container msgTpl
 
 handleKeypress :: JQuery -> JQueryEvent -> JQuery -> Effect Unit
 handleKeypress form event _ = do
@@ -38,13 +36,32 @@ handleFormSubmit :: JQuery -> JQueryEvent -> JQuery -> Effect Unit
 handleFormSubmit textarea event form = do
   preventDefault event
   formData <- serialize form
+  setProp "disabled" true textarea
   ajax "/api/msg" POST (Just formData) $ \a ->
     case read a of
-      Right result | result == opSucceded -> log "a"
-                   | otherwise            -> log "b"
+      Right result -> do
+        setProp "disabled" false textarea
+        case unit of
+          _ | result == opSucceded -> setValue "" textarea
+            | otherwise            -> pure unit
       Left e -> log $ "deserialize failed: " <> show e
-  --launchAff_ do
-  --  result <- AX.post ResponseFormat.json "/api/msg" $ Just $ RequestBody.string formData
-  --  case result of
-  --    Left err -> liftEffect $ log $ AX.printError err
-  --    Right response -> liftEffect $ log $ response.statusText
+
+initialLoadMsgs :: JQuery -> JQuery -> Effect Unit
+initialLoadMsgs container msgTpl = do
+  clear container
+  setText "Loading messages" container
+  loadMsgs' Nothing \msgs -> do
+    clear container
+    _ <- flip traverse msgs $ \msg -> do
+      tpl <- clone msgTpl
+      setHtml msg.msg tpl
+      append tpl container
+    pure unit
+
+
+loadMsgs' :: forall a. Maybe a -> (Array Msg -> Effect Unit) -> Effect Unit
+loadMsgs' mData cb = do
+  ajax "/api/get" GET mData $ \a ->
+    case read a of
+      Right (msgs :: Array Msg) -> cb msgs
+      Left e -> log $ "deserialize failed: " <> show e
