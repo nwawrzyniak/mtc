@@ -1,4 +1,11 @@
-module Types (Timestamp(..), instantToTimestamp, Msg(..), RawMsg) where
+module Types ( Timestamp(..)
+             , Msg(..)
+             , RawMsg
+             , OperationStatus
+             , instantToTimestamp
+             , opSucceded
+             , opFailed
+             ) where
 
 import Prelude hiding (apply)
 import Data.Int (floor)
@@ -30,6 +37,14 @@ type Msg = { msg       :: String
 
 
 type RawMsg = {"msg" :: String }
+
+type OperationStatus = {"success" :: Boolean}
+
+opSucceded :: OperationStatus
+opSucceded = {success: true}
+
+opFailed :: OperationStatus
+opFailed = {success: false}
 
 {-
 instance readMsg :: ReadForeign Msg where

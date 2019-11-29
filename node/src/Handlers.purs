@@ -6,6 +6,7 @@ import Data.Either (Either(..))
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Effect.Class (liftEffect)
+import Effect.Console (log)
 import Effect.Exception (Error, message, error)
 import Effect.Aff.Class (liftAff)
 import Node.Express.Request (getRequestHeader, getBody)
@@ -15,7 +16,7 @@ import SQLite3 (DBConnection)
 import Effect.Now (now)
 import Middleware.Middleware as Middleware
 
-import Types (RawMsg, instantToTimestamp)
+import Types (RawMsg, instantToTimestamp, opSucceded, opFailed)
 import Database (prepareDb, sqlGetMessages, sqlInsertMessage)
 
 errorHandler :: Error -> Handler
@@ -36,8 +37,10 @@ addMessageHandler db = do
       Right ({"msg": msg} :: RawMsg) -> do
           ts <- liftEffect $ instantToTimestamp <$> now
           _ <- liftAff $ db' $ sqlInsertMessage {msg: msg, timestamp: ts}
-          sendJson {success: "true"}
-      Left e -> throwError $ error $ show e
+          sendJson opSucceded
+      Left e -> do
+          liftEffect $ log $ show e
+          sendJson opFailed
   where db' = prepareDb db
 
 parseBody :: Handler

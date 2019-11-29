@@ -1,3 +1,4 @@
+//module SimpleJquery.SimpleJquery
 'use strict';
 
 exports.trigger = function(evt) {
@@ -22,5 +23,11 @@ exports.isShiftDown = function(evt) {
 exports.serialize = function(ob) {
   return function() {
     return ob.serialize();
+  }
+}
+
+exports._ajax = function(settings) {
+  return function() {
+    return JQuery.ajax(settings)
   }
 }
