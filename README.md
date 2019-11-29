@@ -15,8 +15,8 @@ After that install pulp & bower `npm install -g pulp bower`.
 ### Dependencies
 Either use `install_dep.sh` or do
 ```
+npm install
 bower install
-pulp install
 ```
 inside the `node` folder of this repo.
 
