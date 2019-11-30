@@ -15,4 +15,8 @@ Execute the following commands to build simple-text-html
 ./build.sh
 ```
 ## Starting the server
-To start the server just execute ```./run.sh```.
+To start the server just execute
+```
+./run.sh
+```
+By default it will listen on port 3000.
