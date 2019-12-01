@@ -8,3 +8,5 @@
 /node/.purs*
 /node/.psa*
 /node/data/*
+/node/static/main.js
+/node/static/main.min.js
