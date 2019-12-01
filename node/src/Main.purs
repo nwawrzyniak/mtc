@@ -13,7 +13,7 @@ import Effect.Aff (Aff, Fiber, launchAff, launchAff_)
 import Effect.Timer (setInterval)
 import Effect.Now (now)
 import Node.FS.Aff (exists, mkdir)
-import Node.Express.App (App, listenHttp, get, post, useOnError, useAt)
+import Node.Express.App (App, listenHostHttp, get, post, useOnError, useAt)
 import Node.Express.Response (send)
 import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
@@ -33,17 +33,15 @@ parseInt str = fromMaybe 0 $ fromString str
 app :: DBConnection -> App
 app db = do
     let static' = static "./static/"
-    get   "/"          $ static'
-    get   "/style.css" $ static'
-    get   "/main.js"   $ static'
-    get   "/test.js"   $ static'
-    useAt "/api/get"   $ parseBody
-    get   "/api/get"   $ getMessagesHandler db
-    post  "/api/get"   $ getNewerMessagesHandler db
-    useAt "/api/msg"   $ parseBody
-    post  "/api/msg"   $ addMessageHandler  db
-    get   "/hello"     $ send "Hello, World!"
-    useOnError         $ errorHandler
+    get   "/"            $ static'
+    get   "/style.css"   $ static'
+    get   "/main.min.js" $ static'
+    useAt "/api/get"     $ parseBody
+    get   "/api/get"     $ getMessagesHandler db
+    post  "/api/get"     $ getNewerMessagesHandler db
+    useAt "/api/msg"     $ parseBody
+    post  "/api/msg"     $ addMessageHandler  db
+    useOnError           $ errorHandler
 
 -- | Initializer for the database
 initDB :: Aff DBConnection
@@ -77,5 +75,5 @@ main = do
     db <- initDB
     liftEffect do
       _ <- setInterval (60*1000) (removeOldMsg db)
-      listenHttp (app db) port \_ ->
+      listenHostHttp (app db) port "127.0.0.1" \_ ->
         log $ "Listening on " <> show port
