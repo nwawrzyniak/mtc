@@ -13,7 +13,7 @@ import Effect.Aff (Aff, Fiber, launchAff, launchAff_)
 import Effect.Timer (setInterval)
 import Effect.Now (now)
 import Node.FS.Aff (exists, mkdir)
-import Node.Express.App (App, listenHttp, get, post, useOnError, useAt)
+import Node.Express.App (App, listenHostHttp, get, post, useOnError, useAt)
 import Node.Express.Response (send)
 import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
@@ -77,5 +77,5 @@ main = do
     db <- initDB
     liftEffect do
       _ <- setInterval (60*1000) (removeOldMsg db)
-      listenHttp (app db) port \_ ->
+      listenHostHttp (app db) port "127.0.0.1" \_ ->
         log $ "Listening on " <> show port
