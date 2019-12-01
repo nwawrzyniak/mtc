@@ -33,17 +33,15 @@ parseInt str = fromMaybe 0 $ fromString str
 app :: DBConnection -> App
 app db = do
     let static' = static "./static/"
-    get   "/"          $ static'
-    get   "/style.css" $ static'
-    get   "/main.js"   $ static'
-    get   "/test.js"   $ static'
-    useAt "/api/get"   $ parseBody
-    get   "/api/get"   $ getMessagesHandler db
-    post  "/api/get"   $ getNewerMessagesHandler db
-    useAt "/api/msg"   $ parseBody
-    post  "/api/msg"   $ addMessageHandler  db
-    get   "/hello"     $ send "Hello, World!"
-    useOnError         $ errorHandler
+    get   "/"            $ static'
+    get   "/style.css"   $ static'
+    get   "/main.min.js" $ static'
+    useAt "/api/get"     $ parseBody
+    get   "/api/get"     $ getMessagesHandler db
+    post  "/api/get"     $ getNewerMessagesHandler db
+    useAt "/api/msg"     $ parseBody
+    post  "/api/msg"     $ addMessageHandler  db
+    useOnError           $ errorHandler
 
 -- | Initializer for the database
 initDB :: Aff DBConnection
