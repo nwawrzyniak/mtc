@@ -50,14 +50,15 @@ handleFormSubmit :: JQuery -> JQueryEvent -> JQuery -> Effect Unit
 handleFormSubmit textarea event form = do
   preventDefault event
   formData <- serialize form
-  setProp "disabled" true textarea
+  --setProp "disabled" true textarea
+  setValue "" textarea
   ajax "/api/msg" POST (Just formData) $ \a ->
     case read a of
-      Right result -> do
-        setProp "disabled" false textarea
+      Right result ->
+--        setProp "disabled" false textarea
         case unit of
-          _ | result == opSucceded -> setValue "" textarea
-            | otherwise            -> pure unit
+          _ | result == opSucceded -> pure unit
+            | otherwise            -> log "failed to send message"
       Left e -> log $ "deserialize failed: " <> show e
 
 -- | `Regex` to find `\n` or `\r` or combinations of the two

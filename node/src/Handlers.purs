@@ -65,10 +65,14 @@ addMessageHandler :: DBConnection -> Handler
 addMessageHandler db = do
     body <- getBody
     case runExcept body of
-      Right ({msg: msg} :: RawMsg) -> do
-          ts <- liftEffect $ instantToTimestamp <$> now
-          _ <- liftAff $ db' $ sqlInsertMessage {msg: msg, timestamp: ts}
-          sendJson opSucceded
+      Right ({msg: msg} :: RawMsg) ->
+          let msg' = case msg of
+                ""        -> "\n\r"
+                otherwise -> msg
+          in do
+            ts <- liftEffect $ instantToTimestamp <$> now
+            _ <- liftAff $ db' $ sqlInsertMessage {msg: msg', timestamp: ts}
+            sendJson opSucceded
       Left e -> do
           liftEffect $ log $ show e
           sendJson opFailed

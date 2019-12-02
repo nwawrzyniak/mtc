@@ -47,7 +47,7 @@ app db = do
 initDB :: Aff DBConnection
 initDB = do
   let dataFolder = "./data/"
-      dbFilepath = dataFolder <> "test.sqlite3"
+      dbFilepath = dataFolder <> "data.sqlite3"
   (flip unless) (mkdir dataFolder) =<< exists dataFolder
   db <- newDB dbFilepath
   let db' = prepareDb db
