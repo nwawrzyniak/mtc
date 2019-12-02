@@ -19,4 +19,15 @@ To start the server just execute
 ```
 ./run.sh
 ```
-By default it will listen on port 3000.
+By default it will listen on port 8080.
+
+To specify a different port you can execute
+```
+PORT=XXXX ./run.sh
+```
+
+## Install dependencies, build and run
+To install all (missing) dependencies, (re-)build the programm and execute it (e.g. after a version update), you can also execute
+```
+./full_run.sh
+```
