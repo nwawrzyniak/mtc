@@ -1,31 +1,21 @@
 // module Node.Express.Ws
 'use strict';
 
-exports.mkApplication = function() {
-    var express = require('express');
-    return express();
-}
-
-/*exports._httpServer = function(app) {
-    return function() {
-        var http = require('http');
-        var server = http.createServer(app);
-        return server;
-    }
-}*/
-
-exports._listenHttpWs = function(app) {
+exports._listenHostHttpWs = function(appInit) {
     return function(port) {
-        return function(cb) {
-            return function() {
-                var http = require('http');
-                var server = http.createServer(app);
-                var expressWs = require('express-ws')(app, server,
-                                                {leaveRouterUntouched: true});
-                server.listen(port, function(e) {
-                    return cb(e)();
-                });
-                return server;
+        return function(host) {
+            return function(cb) {
+                return function() {
+                    var app = require('express')();
+                    var expressWs = require('express-ws')(app, null,
+                                                    {leaveRouterUntouched: true});
+                    var server = expressWs.getWss();
+                    appInit(app)();
+                    app.listen(port, host, function(e) {
+                        return cb(e)();
+                    });
+                    return server;
+                }
             }
         }
     }

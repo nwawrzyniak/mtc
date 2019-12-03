@@ -14,6 +14,7 @@ import Effect.Timer (setInterval)
 import Effect.Now (now)
 import Node.FS.Aff (exists, mkdir)
 import Node.Express.App (App, listenHostHttp, get, post, useOnError, useAt)
+import Node.Express.Ws (listenHostHttpWs, ws, echo)
 import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
 import Node.Process (lookupEnv)
@@ -32,6 +33,7 @@ parseInt str = fromMaybe 0 $ fromString str
 app :: DBConnection -> App
 app db = do
     let static' = static "./static/"
+    ws    "/ws/test"     $ echo
     get   "/"            $ static'
     get   "/style.css"   $ static'
     get   "/main.min.js" $ static'
@@ -74,5 +76,5 @@ main = do
     db <- initDB
     liftEffect do
       _ <- setInterval (60*1000) (removeOldMsg db)
-      listenHostHttp (app db) port "127.0.0.1" \_ ->
+      listenHostHttpWs (app db) port "127.0.0.1" \_ ->
         log $ "Listening on " <> show port
