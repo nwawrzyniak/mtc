@@ -25,14 +25,18 @@ To specify a different port you can execute
 ```
 PORT=XXXX ./run.sh
 ```
+e.g.
+```
+PORT=1337 ./run.sh
+```
+to listen on port 1337 instead.
 
 ## Install dependencies, build and run
-To install all (missing) dependencies, (re-)build the programm and execute it (e.g. after a version update), you can also execute
+To install all (missing) dependencies, rebuild the program and execute it, you can also use
 ```
 ./full_run.sh
 ```
 
 ## Annotations
 The simple-text-html server is preconfigured to run only through the "Tor" network.
-If you want to use this server through the clear web or in a local network you should change
-`listenHostHttp (app db) port "127.0.0.1" \_ ->` to `listenHttp (app db) port \_ ->` in `Main.purs` and import `listenHttp`.
+If you want to use this server through the clear web or in a local network you should [follow this guide](https://github.com/nwawrzyniak/simple-text-html/wiki/simple-text-html-for-clear-web)
