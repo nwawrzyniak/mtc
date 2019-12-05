@@ -1,4 +1,40 @@
-html, body {
-    margin: 0;
+* {
+  box-sizing: border-box;
 }
 
+body, html {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+chat-box {
+  display: flex;
+  flex-flow: column;
+  height: 100vh;
+}
+
+#msgs {
+  flex: 1;
+  overflow: auto;
+  padding: 1em;
+}
+
+textarea {
+  resize: none;
+  width: 100%;
+}
+
+footer {
+  padding: 0.4em 0.35em 0.2em 0.35em;
+  bottom: -17;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+}
+
+form {
+  padding: 0;
+  margin: 0;
+}

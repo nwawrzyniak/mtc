@@ -1,17 +1,18 @@
 <html>
 <head>
-<title>Nothing to see here, move on!</title>
+<title>Simple chat</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<!--<script src="main.js"></script>-->
 <script src="main.min.js"></script>
 </head>
 <body>
-<h1>Simple chat</h1>
-<div id="msgs"></div>
-<form method="post" action="/api/msg" id="form">
-  <textarea autofocus name="msg" id="msgfield"></textarea>
-  <input type="submit">
-</form>
+<chat-box>
+  <div id="msgs"></div>
+  <footer>
+    <form method="post" action="/api/msg" id="form">
+      <textarea autofocus name="msg" id="msgfield" rows=3 cols=80></textarea>
+    </form>
+  </footer>
+</chat-box>
 </body>
 </html>
