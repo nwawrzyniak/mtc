@@ -31,3 +31,8 @@ To install all (missing) dependencies, (re-)build the programm and execute it (e
 ```
 ./full_run.sh
 ```
+
+## Annotations
+The simple-text-html server is preconfigured to run only through the "Tor" network.
+If you want to use this server through the clear web or in a local network you should change
+`listenHostHttp (app db) port "127.0.0.1" \_ ->` to `listenHttp (app db) port \_ ->` in `Main.purs` and import `listenHttp`.
