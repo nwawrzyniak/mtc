@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Simple chat</title>
+<title>just a chat</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="main.min.js"></script>
@@ -14,5 +14,11 @@
     </form>
   </footer>
 </chat-box>
+<script>
+window.onload=function () {
+     var objDiv = document.getElementById("msgs");
+     objDiv.scrollTop = objDiv.scrollHeight;
+}
+</script>
 </body>
 </html>
