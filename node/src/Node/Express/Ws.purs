@@ -11,27 +11,17 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
 import Foreign (Foreign, unsafeToForeign)
-import Node.Express.App (App, AppM(..))
+import Node.Express.App (App, AppM(..), apply)
 import Node.Express.Types (Application, Event, Request, class RoutePattern, Port, Host)
 import Node.HTTP (Server)
 import Simple.JSON (class ReadForeign, E, read)
 
 foreign import data WebSocket :: Type
-foreign import _listenHostHttpWs :: (Application -> Effect Unit)
-                                 -> Int
-                                 -> String
-                                 -> (Event -> Effect Unit)
-                                 -> Effect Server
-foreign import _ws :: Fn3 Application Foreign (WebSocket -> Request -> Effect Unit) (Effect Unit)
-foreign import _onMessage :: WebSocket
-                          -> (WebSocket -> Foreign -> Effect Unit)
-                          -> Effect Unit
-foreign import _send :: WebSocket -> String -> Effect Unit
-
 
 class WsHandler m r | m -> r where
   send :: String -> m Unit
   run :: m Unit -> WebSocket -> r -> Effect Unit
+  getSocket :: m WebSocket
 
 newtype WsReqHandlerM a = WsReqHandlerM (WebSocket -> Request -> Aff a)
 
@@ -68,6 +58,7 @@ instance monadAffReqHandlerM :: MonadAff WsReqHandlerM where
 instance reqHandler :: WsHandler WsReqHandlerM Request where
   send msg = WsReqHandlerM \socket _ -> liftEffect $ _send socket msg
   run (WsReqHandlerM h) socket req = void $ launchAff_ $ h socket req
+  getSocket = WsReqHandlerM \socket _ -> pure socket
 
 newtype WsMsgHandlerM a = WsMsgHandlerM (WebSocket -> Foreign -> Aff a)
 
@@ -104,12 +95,24 @@ instance monadAffMsgHandlerM :: MonadAff WsMsgHandlerM where
 instance msgHandler :: WsHandler WsMsgHandlerM Foreign where
   send msg = WsMsgHandlerM \socket _ -> liftEffect $ _send socket msg
   run (WsMsgHandlerM h) socket f = void $ launchAff_ $ h socket f
+  getSocket = WsMsgHandlerM \socket _ -> pure socket
 
+
+foreign import _listenHostHttpWs :: (Application -> Effect Unit)
+                                 -> Int
+                                 -> String
+                                 -> (Event -> Effect Unit)
+                                 -> Effect Server
+foreign import _ws :: Fn3 Application Foreign (WebSocket -> Request -> Effect Unit) (Effect Unit)
+foreign import _onMessage :: WebSocket
+                          -> (WebSocket -> Foreign -> Effect Unit)
+                          -> Effect Unit
+foreign import _send :: WebSocket -> String -> Effect Unit
 
 -- | Run application on specified port & host and execute callback after launch.
 -- | HTTP & Ws version
 listenHostHttpWs :: App -> Port -> Host -> (Event -> Effect Unit) -> Effect Server
-listenHostHttpWs (AppM act) = _listenHostHttpWs act
+listenHostHttpWs app = _listenHostHttpWs $ apply app
 
 onMessage :: WsMsgHandler -> WsReqHandler
 onMessage h = WsReqHandlerM \socket _ ->
@@ -121,15 +124,6 @@ ws r h = AppM \app -> runFn3 _ws app (unsafeToForeign r) $ run h
 getMessage :: forall a. ReadForeign a => WsMsgHandlerM (E a)
 getMessage = WsMsgHandlerM $ \_ msg -> pure $ read msg
 
-echo' :: WsReqHandler
-echo' = WsReqHandlerM \socket req -> do
-  liftEffect $ do
-    log "connected"
-    _onMessage socket $ run $ WsMsgHandlerM \_ msg ->
-      let realMsg = case read msg of
-                      Right ms -> ms
-                      Left err -> show err
-      in liftEffect $ _send socket realMsg
 
 echo :: WsReqHandler
 echo = do
