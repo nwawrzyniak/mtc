@@ -1,10 +1,8 @@
-module Handlers ( errorHandler, getMessagesHandler, getNewerMessagesHandler
-                , addMessageHandler, parseBody, wsHandler
+module Handlers ( errorHandler, addMessageHandler, parseBody, wsHandler
                 ) where
 
 import Prelude hiding (apply)
 import Data.Array (cons)
-import Data.Int (fromString)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
 import Control.Monad.Error.Class (throwError, try)
@@ -14,7 +12,7 @@ import Control.Parallel (parTraverse)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (Error, message, error)
-import Effect.Aff (Aff, parallel, sequential)
+import Effect.Aff (Aff)
 import Effect.Aff.Class (liftAff)
 import Effect.Aff.AVar (AVar, take, put, empty, read)
 import Foreign.Generic (encodeJSON)
@@ -27,9 +25,8 @@ import Simple.JSON (read) as JSON
 import SQLite3 (DBConnection)
 import Effect.Now (now)
 import Middleware.Middleware as Middleware
-import Types (Timestamp(..), RawTimestamp, RawMsg, Msg, instantToTimestamp, msgToRaw, opSucceded, opFailed)
-import Database (prepareDb, sqlGetMessages, sqlInsertMessage
-                , sqlGetNewerMessages)
+import Types (RawMsg, Msg, instantToTimestamp, msgToRaw, opSucceded, opFailed)
+import Database (prepareDb, sqlGetMessages, sqlInsertMessage)
 
 -- | `Handler` to respond with 400 and the produced error
 errorHandler :: Error -> Handler
@@ -37,6 +34,7 @@ errorHandler err = do
   setStatus 400
   sendJson {error: message err}
 
+{-}
 -- | `Handler` which responds with all messages in the database in json format
 getMessagesHandler :: DBConnection -> Handler
 getMessagesHandler db = do
@@ -64,7 +62,7 @@ getNewerMessagesHandler db = do
     Left e -> do
       liftEffect $ log $ show e
       sendJson opFailed
-
+-}
 -- | `Handler` which adds a message to the database.
 -- | It tries to extract the `RawMsg` from the request body, failing with
 -- | `opFailed` if unsuccessful, else it adds the message with the current
@@ -118,7 +116,7 @@ wsHandler db connClients = do
     Left e -> [{msg: "Error! Row didn't deserialize correctly :( "}]
   untilM_ ( do
              msg <- liftAff $ take clMsgCond
-             send msg.msg
+             send $ encodeJSON [msg]
           ) $ pure false
   pure unit
 

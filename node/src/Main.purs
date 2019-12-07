@@ -15,7 +15,7 @@ import Effect.Timer (setInterval)
 import Effect.Now (now)
 import Node.FS.Aff (exists, mkdir)
 import Node.Express.App (App, get, post, useOnError, useAt)
-import Node.Express.Ws (listenHostHttpWs, ws, echo)
+import Node.Express.Ws (listenHostHttpWs, ws)
 import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
 import Node.Process (lookupEnv)
@@ -23,8 +23,7 @@ import SQLite3 (DBConnection, newDB)
 
 import Types (instantToTimestamp)
 import Database (prepareDb, sqlCreateTableIfNotExists, sqlRemoveOldMessages)
-import Handlers ( errorHandler, getMessagesHandler, addMessageHandler
-                , getNewerMessagesHandler, parseBody, wsHandler)
+import Handlers ( errorHandler, addMessageHandler, parseBody, wsHandler)
 
 -- | Parse a `String` to an `Int` defaulting to 0 on failiure
 parseInt :: String -> Int
@@ -35,14 +34,11 @@ app :: DBConnection -> App
 app db = do
     let static' = static "./static/"
     connClients <- liftEffect $ new []
-    ws    "/ws/test"     $ echo
+--    ws    "/ws/test"     $ echo
     ws    "/chat"        $ wsHandler db connClients
     get   "/"            $ static'
     get   "/style.css"   $ static'
     get   "/main.min.js" $ static'
-    useAt "/api/get"     $ parseBody
-    get   "/api/get"     $ getMessagesHandler db
-    post  "/api/get"     $ getNewerMessagesHandler db
     useAt "/api/msg"     $ parseBody
     post  "/api/msg"     $ addMessageHandler  db connClients
     useOnError           $ errorHandler
