@@ -10,3 +10,4 @@
 /node/data/*
 /node/static/main.js
 /node/static/main.min.js
+*nohup.out
