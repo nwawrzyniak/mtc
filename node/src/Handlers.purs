@@ -5,6 +5,7 @@ import Prelude hiding (apply)
 import Data.Array (cons)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
+import Data.Traversable (traverse)
 import Control.Monad.Error.Class (throwError, try)
 import Control.Monad.Except (runExcept)
 import Control.Monad.Loops (untilM_)
@@ -71,18 +72,20 @@ addMessageHandler :: DBConnection -> AVar ConnectedClients -> Handler
 addMessageHandler db connClients = do
     body <- getBody
     case runExcept body of
-      Right ({msg: msg} :: RawMsg) ->
+      Right (msgs :: Array RawMsg) -> do
+        _ <- (flip traverse) msgs \msg ->
           let msg' = case msg of
-                ""        -> "\n\r"
-                otherwise -> msg
+                {msg: ""} -> "\n\r"
+                {msg: m}  -> m
           in do
-            ts <- liftEffect $ instantToTimestamp <$> now
-            let theMsg = {msg: msg', timestamp: ts}
-            _ <- liftAff $ do
+              ts <- liftEffect $ instantToTimestamp <$> now
+              let theMsg = {msg: msg', timestamp: ts}
+              _ <- liftAff $ do
                     _ <- db' $ sqlInsertMessage theMsg
                     clients <- read connClients
                     parTraverse (\c -> put (msgToRaw theMsg) c.msgCond) clients
-            sendJson opSucceded
+              pure unit
+        sendJson opSucceded
       Left e -> do
           liftEffect $ log $ show e
           sendJson opFailed
