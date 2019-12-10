@@ -7,13 +7,15 @@ import Data.DateTime (adjust)
 import Data.DateTime.Instant (fromDateTime, toDateTime)
 import Data.Time.Duration (Days(..))
 import Effect (Effect)
+import Effect.AVar (new)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Aff (Aff, Fiber, launchAff, launchAff_)
 import Effect.Timer (setInterval)
 import Effect.Now (now)
 import Node.FS.Aff (exists, mkdir)
-import Node.Express.App (App, listenHostHttp, get, post, useOnError, useAt)
+import Node.Express.App (App, get, post, useOnError, useAt)
+import Node.Express.Ws (listenHostHttpWs, ws)
 import Node.Express.Middleware.Static (static)
 import Node.HTTP (Server)
 import Node.Process (lookupEnv)
@@ -21,8 +23,7 @@ import SQLite3 (DBConnection, newDB)
 
 import Types (instantToTimestamp)
 import Database (prepareDb, sqlCreateTableIfNotExists, sqlRemoveOldMessages)
-import Handlers ( errorHandler, getMessagesHandler, addMessageHandler
-                , getNewerMessagesHandler, parseBody)
+import Handlers ( errorHandler, addMessageHandler, parseBody, wsHandler)
 
 -- | Parse a `String` to an `Int` defaulting to 0 on failiure
 parseInt :: String -> Int
@@ -32,14 +33,14 @@ parseInt str = fromMaybe 0 $ fromString str
 app :: DBConnection -> App
 app db = do
     let static' = static "./static/"
+    connClients <- liftEffect $ new []
+--    ws    "/ws/test"     $ echo
+    ws    "/chat"        $ wsHandler db connClients
     get   "/"            $ static'
     get   "/style.css"   $ static'
     get   "/main.min.js" $ static'
-    useAt "/api/get"     $ parseBody
-    get   "/api/get"     $ getMessagesHandler db
-    post  "/api/get"     $ getNewerMessagesHandler db
     useAt "/api/msg"     $ parseBody
-    post  "/api/msg"     $ addMessageHandler  db
+    post  "/api/msg"     $ addMessageHandler  db connClients
     useOnError           $ errorHandler
 
 -- | Initializer for the database
@@ -74,5 +75,5 @@ main = do
     db <- initDB
     liftEffect do
       _ <- setInterval (60*1000) (removeOldMsg db)
-      listenHostHttp (app db) port "127.0.0.1" \_ ->
+      listenHostHttpWs (app db) port "127.0.0.1" \_ ->
         log $ "Listening on " <> show port

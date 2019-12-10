@@ -4,6 +4,7 @@ module Types ( Timestamp(..)
              , RawMsg
              , OperationStatus
              , instantToTimestamp
+             , msgToRaw
              , opSucceded
              , opFailed
              ) where
@@ -54,6 +55,9 @@ type RawMsg = { msg :: String }
 -- | Representation of the outcome of an operation.
 -- | This is easily communicatable via http/xhr/json
 type OperationStatus = { success :: Boolean}
+
+msgToRaw :: Msg -> RawMsg
+msgToRaw msg = { msg: msg.msg }
 
 -- | Represents success of an operation
 opSucceded :: OperationStatus
