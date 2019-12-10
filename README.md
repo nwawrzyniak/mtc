@@ -9,6 +9,11 @@ You will need to install the following tools before building simple-text-html
 - pulp
 - purescript or purs
 ## Installation
+After cloning this repository you will need to fetch a git submodule. This can be done with
+```
+git submodule update
+```
+
 Execute the following commands to build simple-text-html
 ```
 ./install_deps.sh

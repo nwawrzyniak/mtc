@@ -1,8 +1,8 @@
 module FrontendMain where
 
 import Prelude hiding (apply, append)
+import Control.Monad.Except (runExcept)
 import Data.Maybe (Maybe(..))
-import Data.Newtype (unwrap)
 import Data.Either (Either(..))
 import Data.String.Regex (Regex, replace)
 import Data.String.Regex.Flags (global)
@@ -10,16 +10,22 @@ import Data.String.Regex.Unsafe (unsafeRegex)
 import Data.Traversable (traverse)
 import Effect (Effect)
 import Effect.Console (log)
-import Effect.Now (now)
-import Effect.Timer (setTimeout)
-import Effect.Ref as Ref
+import Foreign (readString)
+import Foreign.Generic (decodeJSON)
 import JQuery (JQuery, JQueryEvent, ready, select, on, preventDefault, create
-              , clear, clone, append, setHtml, setText, setProp, setValue)
+              , clone, append, setHtml, setValue)
 import Simple.JSON (read)
-
-import Types (Msg, RawTimestamp, instantToTimestamp, opSucceded)
+import Types (RawMsg, opSucceded)
 import SimpleJquery.SimpleJquery (HTTPMethod(..), ajax, getKeycode, isShiftDown
                                   , serialize, trigger)
+import Web.Socket.WebSocket (create, toEventTarget) as WS
+import Web.Socket.Event.EventTypes (onMessage) as WS
+import Web.Socket.Event.MessageEvent (fromEvent, data_)
+import Web.Event.Event (Event)
+import Web.Event.EventTarget (eventListener, addEventListener)
+import Web.HTML (window)
+import Web.HTML.Window (location)
+import Web.HTML.Location (host)
 
 main :: Effect Unit
 main = ready do
@@ -29,7 +35,8 @@ main = ready do
   msgTpl    <- create "<div class='msg'></div>"
   on "keypress" (handleKeypress form) textarea
   on "submit" (handleFormSubmit textarea) form
-  initialLoadMsgs container msgTpl
+  connectWs container msgTpl
+--  initialLoadMsgs container msgTpl
 
 -- | Handles a keypress on the textarea.
 -- | First argument is the form. Other arguments are filled by the `on`
@@ -71,11 +78,43 @@ nl2br = replace nl2brRegex "<br>$1"
 
 -- | Add a message to the conatiner
 -- | Arguments: Container to add message to, template to put text into, the message
-addMsgJq :: JQuery -> JQuery -> Msg -> Effect Unit
+addMsgJq :: JQuery -> JQuery -> RawMsg -> Effect Unit
 addMsgJq container msgTpl msg = do
   tpl <- clone msgTpl
   setHtml (nl2br msg.msg) tpl
   append tpl container
+
+connectWs :: JQuery -> JQuery -> Effect Unit
+connectWs container msgTpl = do
+  hostname <- window >>= location >>= host
+  ws <- WS.create ("ws://" <> hostname <> "/chat") []
+  let evtRec = WS.toEventTarget ws
+  msgListener <- eventListener $ msgEvent container msgTpl
+  addEventListener WS.onMessage msgListener false evtRec
+  pure unit
+
+msgEvent :: JQuery -> JQuery -> Event -> Effect Unit
+msgEvent container msgTpl event = do
+  case fromEvent event of
+    Just evt -> do
+      let unparsed = data_ evt
+          parsed = runExcept (readString unparsed >>= decodeJSON)
+      case parsed of
+        Right (msgs :: Array RawMsg) -> do
+          _ <- flip traverse msgs $ addMsgJq container msgTpl
+          pure unit
+        Left e -> log $ "deserialize failed: " <> show e
+    _ -> log "Msg parsing falied"
+
+{-
+  let mData  = read <<< data_ <$> fromEvent event
+  case mData of
+    Just (Right (msgs :: Array RawMsg)) -> do
+      _ <- flip traverse msgs $ addMsgJq container msgTpl
+      pure unit
+    Just (Left e) -> log $ "deserialize failed: " <> show e
+    _ -> log "Msg parsing falied"
+{-
 
 -- | Load all messages on page startup, add them to the container and start the
 -- | cronjob which pulls for new messages
@@ -117,3 +156,4 @@ loadMsgs mData cb = do
     case read a of
       Right (msgs :: Array Msg) -> cb msgs
       Left e -> log $ "deserialize failed: " <> show e
+-}

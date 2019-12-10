@@ -9,7 +9,6 @@
   "dependencies": {
     "purescript-effect": "^2.0.1",
     "purescript-prelude": "^4.1.1",
-    "purescript-express": "master",
     "purescript-node-process": "^7.0.0",
     "purescript-node-sqlite3": "^6.0.0",
     "purescript-now": "^4.0.0",
@@ -17,11 +16,21 @@
     "purescript-js-timers": "^4.0.1",
     "purescript-jquery": "^5.0.0",
     "purescript-simple-json": "^7.0.0",
-    "purescript-refs": "^4.1.0"
+    "purescript-refs": "^4.1.0",
+    "purescript-express": "./deps/purescript-express/",
+    "purescript-foreign-generic": "^10.0.0",
+    "purescript-node-http": "^5.0.2",
+    "purescript-monad-loops": "^0.5.0",
+    "purescript-web-socket": "^2.0.0",
+    "purescript-web-html": "^2.3.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0",
     "purescript-test-unit": "^15.0.0",
     "purescript-node-fs-aff": "^6.0.0"
+  },
+  "resolutions": {
+    "purescript-web-dom": "~4.0.0",
+    "purescript-web-events": "^2.0.0"
   }
 }
