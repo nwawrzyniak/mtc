@@ -36,7 +36,7 @@ instance writeTs :: WriteForeign Timestamp where
 
 -- | Transforms an `Instant` to a `Timestamp`
 instantToTimestamp :: Instant -> Timestamp
-instantToTimestamp = wrap <<< floor <<< (flip div 1000.0) <<< unwrap <<< unInstant
+instantToTimestamp = wrap <<< floor <<< unwrap <<< unInstant
 
 -- | Representation of a raw timestamp.
 -- | This is easily communicatable via http/xhr/json
