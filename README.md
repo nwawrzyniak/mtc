@@ -7,7 +7,7 @@ You will need to install the following tools before building simple-text-html
 - npm
 - bower
 - pulp
-- purescript or purs
+- purs
 ## Installation
 After cloning this repository you will need to fetch a git submodule. This can be done with
 ```
