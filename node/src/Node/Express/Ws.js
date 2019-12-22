@@ -19,14 +19,14 @@ exports._listenHostHttpWs = function(appInit) {
             }
         }
     }
-}
+};
 
 exports._ws = function (app, route, handler) {
   return function () {
     return app.ws(route, function(ws, req) {
       return handler(ws)(req)();
     });
-  };
+  }
 };
 
 exports._onMessage = function(ws) {
@@ -37,7 +37,17 @@ exports._onMessage = function(ws) {
       });
     }
   }
-}
+};
+
+exports._onClose = function(ws) {
+  return function(cb) {
+    return function() {
+      return ws.on('close', function() {
+        return cb();
+      });
+    }
+  }
+};
 
 exports._send = function(ws) {
   return function(msg) {
