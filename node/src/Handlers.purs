@@ -81,11 +81,11 @@ addMessageHandler db connClients = do
               liftEffect $ log "start"
               ts <- liftEffect $ instantToTimestamp <$> now
               let theMsg = {msg: msg', timestamp: ts}
-              _ <- liftAff $ do
+              liftAff $ do
                     _ <- db' $ sqlInsertMessage theMsg
                     clients <- read connClients
                     parTraverse (try <<< put (msgToRaw theMsg) <<< _.msgCond) clients
-            sendJson opSucceded
+        sendJson opSucceded
       Left e -> do
           liftEffect $ log $ show e
           sendJson opFailed
