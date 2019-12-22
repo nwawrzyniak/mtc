@@ -78,7 +78,6 @@ addMessageHandler db connClients = do
                 {msg: ""} -> "\n\r"
                 {msg: m}  -> m
           in do
-              liftEffect $ log "start"
               ts <- liftEffect $ instantToTimestamp <$> now
               let theMsg = {msg: msg', timestamp: ts}
               liftAff $ do
