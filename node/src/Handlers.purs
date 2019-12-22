@@ -2,7 +2,7 @@ module Handlers ( errorHandler, addMessageHandler, parseBody, wsHandler
                 ) where
 
 import Prelude hiding (apply)
-import Data.Array (cons)
+import Data.Array (cons, filterA)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
 import Control.Monad.Error.Class (throwError, try)
@@ -14,13 +14,13 @@ import Effect.Console (log)
 import Effect.Exception (Error, message, error)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (liftAff)
-import Effect.Aff.AVar (AVar, take, put, empty, read)
+import Effect.Aff.AVar (AVar, take, put, empty, read, status, kill, isKilled)
 import Foreign.Generic (encodeJSON)
 import Node.Express.Request (getRequestHeader, getBody, getMethod)
 import Node.Express.Response (sendJson, setStatus)
 import Node.Express.Handler (Handler, next)
 import Node.Express.Types (Method (POST))
-import Node.Express.Ws (WebSocket, WsReqHandler, getSocket, send)
+import Node.Express.Ws (WebSocket, WsReqHandler, getSocket, send, onClose)
 import Simple.JSON (read) as JSON
 import SQLite3 (DBConnection)
 import Effect.Now (now)
@@ -81,7 +81,7 @@ addMessageHandler db connClients = do
             _ <- liftAff $ do
                     _ <- db' $ sqlInsertMessage theMsg
                     clients <- read connClients
-                    parTraverse (\c -> put (msgToRaw theMsg) c.msgCond) clients
+                    parTraverse (try <<< put (msgToRaw theMsg) <<< _.msgCond) clients
             sendJson opSucceded
       Left e -> do
           liftEffect $ log $ show e
@@ -107,17 +107,24 @@ wsHandler db connClients = do
   let db' = prepareDb db
   liftEffect $ log $ "[ws] client connected"
   clMsgCond <- liftAff $ empty
+  onClose $ do
+    kill (error "disconnected") clMsgCond
+    withClients connClients $ filterA $ _.msgCond >>> status >=> isKilled >>> not >>> pure
   socket <- getSocket
   liftAff $ withClients connClients $ pure <<< cons {soc: socket, msgCond: clMsgCond}
-  liftEffect $ log $ "[ws] client added"
   results <- liftAff $ JSON.read <$> db' sqlGetMessages
-  send <<< encodeJSON $ case results of
+  _ <- try <<< send <<< encodeJSON $ case results of
     Right (as :: Array Msg) -> msgToRaw <$> as
     Left e -> [{msg: "Error! Row didn't deserialize correctly :( "}]
   untilM_ ( do
-             msg <- liftAff $ take clMsgCond
-             send $ encodeJSON [msg]
-          ) $ pure false
+             mmsg <- liftAff $ try $ take clMsgCond
+             case mmsg of
+               Right msg -> send $ encodeJSON [msg]
+               Left _ -> pure unit
+          ) $ do
+            clStatus <- liftAff $ status clMsgCond
+            pure <<< not <<< isKilled $ clStatus
+  liftEffect $ log $ "[ws] client disconnected"
   pure unit
 
 

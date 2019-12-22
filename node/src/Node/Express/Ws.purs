@@ -10,6 +10,8 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
+import Effect.Exception (Error)
+import Control.Monad.Error.Class (class MonadThrow, class MonadError, throwError, catchError)
 import Foreign (Foreign, unsafeToForeign)
 import Node.Express.App (App, AppM(..), apply)
 import Node.Express.Types (Application, Event, Request, class RoutePattern, Port, Host)
@@ -60,6 +62,16 @@ instance reqHandler :: WsHandler WsReqHandlerM Request where
   run (WsReqHandlerM h) socket req = void $ launchAff_ $ h socket req
   getSocket = WsReqHandlerM \socket _ -> pure socket
 
+instance monadThrowReqHandlerM :: MonadThrow Error WsReqHandlerM where
+  throwError e = WsReqHandlerM \_ _ -> throwError e
+
+instance monadErrorReqHandlerM :: MonadError Error WsReqHandlerM where
+    --forall a. WsReqHandlerM a -> (Error -> WsReqHandlerM a) -> WsReqHandlerM a
+    catchError (WsReqHandlerM act) h =
+      WsReqHandlerM \socket req -> catchError (act socket req)
+        \e -> let (WsReqHandlerM h') = h e
+              in h' socket req
+
 newtype WsMsgHandlerM a = WsMsgHandlerM (WebSocket -> Foreign -> Aff a)
 
 type WsMsgHandler = WsMsgHandlerM Unit
@@ -107,6 +119,9 @@ foreign import _ws :: Fn3 Application Foreign (WebSocket -> Request -> Effect Un
 foreign import _onMessage :: WebSocket
                           -> (WebSocket -> Foreign -> Effect Unit)
                           -> Effect Unit
+foreign import _onClose :: WebSocket
+                        -> Effect Unit
+                        -> Effect Unit
 foreign import _send :: WebSocket -> String -> Effect Unit
 
 -- | Run application on specified port & host and execute callback after launch.
@@ -117,6 +132,10 @@ listenHostHttpWs app = _listenHostHttpWs $ apply app
 onMessage :: WsMsgHandler -> WsReqHandler
 onMessage h = WsReqHandlerM \socket _ ->
   liftEffect $ _onMessage socket $ run h
+
+onClose :: Aff Unit -> WsReqHandler
+onClose h = WsReqHandlerM \socket _ ->
+  liftEffect $ _onClose socket $ launchAff_ h
 
 ws :: forall r. RoutePattern r => r -> WsReqHandler -> App
 ws r h = AppM \app -> runFn3 _ws app (unsafeToForeign r) $ run h
