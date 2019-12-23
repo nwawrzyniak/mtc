@@ -2,10 +2,10 @@ module Handlers ( errorHandler, addMessageHandler, parseBody, wsHandler
                 ) where
 
 import Prelude hiding (apply)
-import Data.Array (cons, filterA)
+import Data.Array (cons, filterA, foldRecM)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
-import Data.Traversable (traverse)
+import Data.Newtype (wrap, unwrap)
 import Control.Monad.Error.Class (throwError, try)
 import Control.Monad.Except (runExcept)
 import Control.Monad.Loops (untilM_)
@@ -73,17 +73,16 @@ addMessageHandler db connClients = do
     body <- getBody
     case runExcept body of
       Right (msgs :: Array RawMsg) -> do
-        _ <- (flip traverse) msgs \msg ->
-          let msg' = case msg of
-                {msg: ""} -> "\n\r"
-                {msg: m}  -> m
-          in do
-              ts <- liftEffect $ instantToTimestamp <$> now
-              let theMsg = {msg: msg', timestamp: ts}
-              liftAff $ do
-                    _ <- db' $ sqlInsertMessage theMsg
-                    clients <- read connClients
-                    parTraverse (try <<< put (msgToRaw theMsg) <<< _.msgCond) clients
+        ts <- liftEffect $ instantToTimestamp <$> now
+        _ <- liftAff $ msgs # flip (flip foldRecM $ ts) $ \ts' msg -> do
+              let theMsg = {msg: msg', timestamp: ts'}
+                  msg' = case msg of
+                    {msg: ""} -> "\n\r"
+                    {msg: m}  -> m
+              _ <- db' $ sqlInsertMessage theMsg
+              clients <- read connClients
+              _ <- parTraverse (try <<< put (msgToRaw theMsg) <<< _.msgCond) clients
+              pure $ wrap $ (_ + 1) $ unwrap ts'
         sendJson opSucceded
       Left e -> do
           liftEffect $ log $ show e
