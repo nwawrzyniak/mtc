@@ -2,9 +2,10 @@ module Handlers ( errorHandler, addMessageHandler, parseBody, wsHandler
                 ) where
 
 import Prelude hiding (apply)
-import Data.Array (cons)
+import Data.Array (cons, filterA, foldRecM)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
+import Data.Newtype (wrap, unwrap)
 import Control.Monad.Error.Class (throwError, try)
 import Control.Monad.Except (runExcept)
 import Control.Monad.Loops (untilM_)
@@ -14,13 +15,13 @@ import Effect.Console (log)
 import Effect.Exception (Error, message, error)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (liftAff)
-import Effect.Aff.AVar (AVar, take, put, empty, read)
+import Effect.Aff.AVar (AVar, take, put, empty, read, status, kill, isKilled)
 import Foreign.Generic (encodeJSON)
 import Node.Express.Request (getRequestHeader, getBody, getMethod)
 import Node.Express.Response (sendJson, setStatus)
 import Node.Express.Handler (Handler, next)
 import Node.Express.Types (Method (POST))
-import Node.Express.Ws (WebSocket, WsReqHandler, getSocket, send)
+import Node.Express.Ws (WebSocket, WsReqHandler, getSocket, send, onClose)
 import Simple.JSON (read) as JSON
 import SQLite3 (DBConnection)
 import Effect.Now (now)
@@ -71,18 +72,18 @@ addMessageHandler :: DBConnection -> AVar ConnectedClients -> Handler
 addMessageHandler db connClients = do
     body <- getBody
     case runExcept body of
-      Right ({msg: msg} :: RawMsg) ->
-          let msg' = case msg of
-                ""        -> "\n\r"
-                otherwise -> msg
-          in do
-            ts <- liftEffect $ instantToTimestamp <$> now
-            let theMsg = {msg: msg', timestamp: ts}
-            _ <- liftAff $ do
-                    _ <- db' $ sqlInsertMessage theMsg
-                    clients <- read connClients
-                    parTraverse (\c -> put (msgToRaw theMsg) c.msgCond) clients
-            sendJson opSucceded
+      Right (msgs :: Array RawMsg) -> do
+        ts <- liftEffect $ instantToTimestamp <$> now
+        _ <- liftAff $ msgs # flip (flip foldRecM $ ts) $ \ts' msg -> do
+              let theMsg = {msg: msg', timestamp: ts'}
+                  msg' = case msg of
+                    {msg: ""} -> "\n\r"
+                    {msg: m}  -> m
+              _ <- db' $ sqlInsertMessage theMsg
+              clients <- read connClients
+              _ <- parTraverse (try <<< put (msgToRaw theMsg) <<< _.msgCond) clients
+              pure $ wrap $ (_ + 1) $ unwrap ts'
+        sendJson opSucceded
       Left e -> do
           liftEffect $ log $ show e
           sendJson opFailed
@@ -107,17 +108,24 @@ wsHandler db connClients = do
   let db' = prepareDb db
   liftEffect $ log $ "[ws] client connected"
   clMsgCond <- liftAff $ empty
+  onClose $ do
+    kill (error "disconnected") clMsgCond
+    withClients connClients $ filterA $ _.msgCond >>> status >=> isKilled >>> not >>> pure
   socket <- getSocket
   liftAff $ withClients connClients $ pure <<< cons {soc: socket, msgCond: clMsgCond}
-  liftEffect $ log $ "[ws] client added"
   results <- liftAff $ JSON.read <$> db' sqlGetMessages
-  send <<< encodeJSON $ case results of
+  _ <- try <<< send <<< encodeJSON $ case results of
     Right (as :: Array Msg) -> msgToRaw <$> as
     Left e -> [{msg: "Error! Row didn't deserialize correctly :( "}]
   untilM_ ( do
-             msg <- liftAff $ take clMsgCond
-             send $ encodeJSON [msg]
-          ) $ pure false
+             mmsg <- liftAff $ try $ take clMsgCond
+             case mmsg of
+               Right msg -> send $ encodeJSON [msg]
+               Left _ -> pure unit
+          ) $ do
+            clStatus <- liftAff $ status clMsgCond
+            pure <<< not <<< isKilled $ clStatus
+  liftEffect $ log $ "[ws] client disconnected"
   pure unit
 
 

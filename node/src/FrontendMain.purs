@@ -4,20 +4,20 @@ import Prelude hiding (apply, append)
 import Control.Monad.Except (runExcept)
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
-import Data.String.Regex (Regex, replace)
+import Data.String.Regex (Regex, replace, split)
 import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Data.Traversable (traverse)
 import Effect (Effect)
 import Effect.Console (log)
 import Foreign (readString)
-import Foreign.Generic (decodeJSON)
+import Foreign.Generic (decodeJSON, encodeJSON)
 import JQuery (JQuery, JQueryEvent, ready, select, on, preventDefault, create
-              , clone, append, setHtml, setValue)
+              , clone, append, setHtml, getValue, setValue)
 import Simple.JSON (read)
 import Types (RawMsg, opSucceded)
 import SimpleJquery.SimpleJquery (HTTPMethod(..), ajax, getKeycode, isShiftDown
-                                  , serialize, trigger)
+                                  , trigger)
 import Web.Socket.WebSocket (create, toEventTarget) as WS
 import Web.Socket.Event.EventTypes (onMessage) as WS
 import Web.Socket.Event.MessageEvent (fromEvent, data_)
@@ -56,25 +56,30 @@ handleKeypress form event _ = do
 handleFormSubmit :: JQuery -> JQueryEvent -> JQuery -> Effect Unit
 handleFormSubmit textarea event form = do
   preventDefault event
-  formData <- serialize form
-  --setProp "disabled" true textarea
+  msg <- getValue textarea
   setValue "" textarea
-  ajax "/api/msg" POST (Just formData) $ \a ->
-    case read a of
-      Right result ->
---        setProp "disabled" false textarea
-        case unit of
-          _ | result == opSucceded -> pure unit
-            | otherwise            -> log "failed to send message"
-      Left e -> log $ "deserialize failed: " <> show e
+  case read msg of
+    Right msg' -> do
+      let (msgs :: Array RawMsg) = {msg: _} <$> split nlRegex msg'
+      ajax "/api/msg" POST (Just (encodeJSON msgs)) $ \a ->
+        case read a of
+          Right result ->
+            case unit of
+              _ | result == opSucceded -> pure unit
+                | otherwise            -> log "failed to send message"
+          Left e -> log $ "deserialize failed: " <> show e
+    Left e -> log $ "deserialize failed: " <> show e
+
+  --formData <- serialize form
+  --setProp "disabled" true textarea
 
 -- | `Regex` to find `\n` or `\r` or combinations of the two
-nl2brRegex :: Regex
-nl2brRegex = unsafeRegex "(\r\n|\n\r|\r|\n)" global
+nlRegex :: Regex
+nlRegex = unsafeRegex "(\r\n|\n\r|\r|\n)" global
 
 -- | Adds a html `<br>` where a newline is
 nl2br :: String -> String
-nl2br = replace nl2brRegex "<br>$1"
+nl2br = replace nlRegex "<br>$1"
 
 -- | Add a message to the conatiner
 -- | Arguments: Container to add message to, template to put text into, the message

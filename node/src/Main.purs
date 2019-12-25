@@ -74,6 +74,7 @@ main = do
   launchAff do
     db <- initDB
     liftEffect do
+      removeOldMsg db
       _ <- setInterval (60*1000) (removeOldMsg db)
       listenHostHttpWs (app db) port "127.0.0.1" \_ ->
         log $ "Listening on " <> show port

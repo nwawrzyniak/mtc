@@ -32,6 +32,7 @@ exports._ajax = function(settings) {
       settings.success = function (a) {
         return cb(a)();
       }
+      settings.contentType = "application/json";
       return jQuery.ajax(settings);
     }
   }
