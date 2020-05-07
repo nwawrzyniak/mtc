@@ -9,6 +9,10 @@ on:
   pull_request:
     branches: [ master ]
 
+defaults:
+  run:
+    working-directory: node
+
 jobs:
   build:
 
@@ -16,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [10.x, 12.13.x, 12.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -38,9 +42,7 @@ jobs:
         key: ${{ runner.os }}-bower-${{ matrix.node-version }}-${{ hashFiles('**/bower.json') }}
         restore-keys: |
           ${{ runner.os }}-bower-${{ matrix.node-version }}-
-    - run: |
-        cd node
-        npm ci
+    - run: npm ci
     - run: bower install
     - run: pulp build
     - run: pulp browserify -m FrontendMain -O | npx uglifyjs --compress --mangle --toplevel -o static/main.min.js
