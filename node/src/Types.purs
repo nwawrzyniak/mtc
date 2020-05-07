@@ -11,7 +11,7 @@ module Types ( ApplicationM
              ) where
 
 import Prelude hiding (apply)
-import Data.Int (floor)
+import Data.Int53 (Int53, floor, toNumber)
 import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.DateTime.Instant (Instant, unInstant)
 import Simple.JSON ( class ReadForeign , readImpl
@@ -22,7 +22,7 @@ import Control.Monad.Logger.Trans (LoggerT)
 type ApplicationM m = LoggerT m
 
 -- | Newtype wrapper for `Int` representing a Unix-timestamp
-newtype Timestamp = Timestamp Int
+newtype Timestamp = Timestamp Int53
 
 derive instance eqTimestamp :: Eq Timestamp
 
@@ -34,10 +34,10 @@ instance showTimestamp :: Show Timestamp where
 instance readTs :: ReadForeign Timestamp where
   readImpl a = do
     b <- readImpl a
-    pure $ Timestamp b
+    pure $ Timestamp $ floor b
 
 instance writeTs :: WriteForeign Timestamp where
-  writeImpl (Timestamp a) = writeImpl a
+  writeImpl (Timestamp a) = writeImpl $ toNumber a
 
 -- | Transforms an `Instant` to a `Timestamp`
 instantToTimestamp :: Instant -> Timestamp

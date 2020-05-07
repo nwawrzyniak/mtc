@@ -3,6 +3,7 @@ module Database ( module Export, prepareDb, sqlRemoveOldMessages, sqlGetMessages
                 , sqlCreateTableIfNotExists) where
 
 import Data.Newtype (unwrap)
+import Data.Int53 (Int53)
 import Foreign (Foreign)
 import Effect.Aff (Aff)
 import SQLite3 (DBConnection, Query, queryObjectDB)
@@ -20,7 +21,7 @@ prepareDb :: DBConnection -> PrepedDb
 prepareDb db { query, params } = queryObjectDB db query params
 
 -- | Builds a query which deletes messages before given `Timestamp`
-sqlRemoveOldMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int )
+sqlRemoveOldMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int53 )
 sqlRemoveOldMessages t = { query: "DELETE FROM `msg` WHERE `timestamp` < $timestamp;"
                          , params: { "$timestamp": unwrap t }
                          }
@@ -32,13 +33,13 @@ sqlGetMessages = { query: "SELECT `msg`, `timestamp` FROM `msg`;"
                  }
 
 -- | Builds a query which selects all messages after specified `Timestamp`
-sqlGetNewerMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int )
+sqlGetNewerMessages :: Timestamp -> ParamedQuery ( "$timestamp" :: Int53 )
 sqlGetNewerMessages t = { query: "SELECT `msg`, `timestamp` FROM `msg` WHERE `timestamp` >= $timestamp;"
                         , params: { "$timestamp": unwrap t }
                         }
 
 -- | Builds a query to insert a `Msg` into the database
-sqlInsertMessage ::  Msg -> ParamedQuery ( "$msg" :: String, "$timestamp" :: Int)
+sqlInsertMessage ::  Msg -> ParamedQuery ( "$msg" :: String, "$timestamp" :: Int53)
 sqlInsertMessage msg = { query: "INSERT INTO `msg` (`msg`, `timestamp`) VALUES ($msg, $timestamp);"
                        , params: { "$msg": msg.msg
                                  , "$timestamp": unwrap msg.timestamp
