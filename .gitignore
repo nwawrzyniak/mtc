@@ -10,4 +10,5 @@
 /node/data/*
 /node/static/main.js
 /node/static/main.min.js
+/node/test.log
 *nohup.out
