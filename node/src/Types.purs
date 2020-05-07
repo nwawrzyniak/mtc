@@ -1,4 +1,5 @@
-module Types ( Timestamp(..)
+module Types ( ApplicationM
+             , Timestamp(..)
              , RawTimestamp
              , Msg(..)
              , RawMsg
@@ -16,6 +17,10 @@ import Data.DateTime.Instant (Instant, unInstant)
 import Simple.JSON ( class ReadForeign , readImpl
                    , class WriteForeign, writeImpl
                    )
+import Control.Monad.Logger.Trans (LoggerT)
+
+type ApplicationM m = LoggerT m
+
 -- | Newtype wrapper for `Int` representing a Unix-timestamp
 newtype Timestamp = Timestamp Int
 

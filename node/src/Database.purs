@@ -1,10 +1,12 @@
-module Database (prepareDb, sqlRemoveOldMessages, sqlGetMessages, sqlGetNewerMessages
-                , sqlInsertMessage, sqlCreateTableIfNotExists) where
+module Database ( module Export, prepareDb, sqlRemoveOldMessages, sqlGetMessages
+                , sqlGetNewerMessages , sqlInsertMessage
+                , sqlCreateTableIfNotExists) where
 
 import Data.Newtype (unwrap)
 import Foreign (Foreign)
 import Effect.Aff (Aff)
 import SQLite3 (DBConnection, Query, queryObjectDB)
+import SQLite3 (DBConnection, newDB, closeDB) as Export
 import Types
 
 -- | Represents a sql query with parameters
