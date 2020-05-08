@@ -27,5 +27,5 @@ jobs:
       run: |
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
         git checkout gh-pages
-        git rebase master
+        git merge --ff-only master
         git push
