@@ -25,6 +25,6 @@ jobs:
     # Runs a single command using the runners shell
     - name: Update gh-pages branch by merging from master
       run: |
-        git checkout gh-pages
+        git checkout -b gh-pages
         git merge master
         git push --set-upstream origin gh-pages
