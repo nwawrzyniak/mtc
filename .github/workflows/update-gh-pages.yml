@@ -26,5 +26,6 @@ jobs:
     - name: Update gh-pages branch by merging from master
       run: |
         git checkout -b gh-pages
+        git pull
         git merge master
         git push --set-upstream origin gh-pages
