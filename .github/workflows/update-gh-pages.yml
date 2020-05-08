@@ -25,7 +25,7 @@ jobs:
     # Runs a single command using the runners shell
     - name: Update gh-pages branch by merging from master
       run: |
-        git fetch --no-tags --prune --depth=1 origin +refs/heads/gh-pages:refs/remotes/origin/gh-pages
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/gh-pages*:refs/remotes/origin/gh-pages*
         git checkout gh-pages
         git merge master --ff-only
         git push
