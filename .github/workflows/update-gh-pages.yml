@@ -26,5 +26,6 @@ jobs:
     - name: Update gh-pages branch by merging from master
       run: |
         git checkout -b gh-pages
-        git pull --allow-unrelated-histories
+        git pull origin gh-pages --allow-unrelated-histories
+        git branch --set-upstream-to=origin/gh-pages gh-pages
         git push --set-upstream origin gh-pages
