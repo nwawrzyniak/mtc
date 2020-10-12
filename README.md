@@ -1,5 +1,5 @@
 # simple-text-html
-A *super* lightweight text post server for over-anonymous chatting
+An extremely minimalistic text post server for over-anonymous chatting
 ## Dependencies
 You will need to install the following tools before building simple-text-html
 
