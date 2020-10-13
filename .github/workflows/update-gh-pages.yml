@@ -19,10 +19,15 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+      with:
+        ref: 'master'
 
     # Runs a single command using the runners shell
     - name: Update gh-pages branch by merging from master
       run: |
-        git checkout gh-pages
-        git merge master --ff-only
-        git push
+        git config user.email "ci@example.com"
+        git config user.name "CI"
+        git checkout -b gh-pages
+        git pull origin gh-pages --allow-unrelated-histories
+        git branch --set-upstream-to=origin/gh-pages gh-pages
+        git push --set-upstream origin gh-pages
