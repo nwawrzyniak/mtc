@@ -19,21 +19,22 @@ import Effect.Aff.AVar (AVar, take, put, empty, read, status, kill, isKilled)
 import Foreign.Generic (encodeJSON)
 import Node.Express.Request (getRequestHeader, getBody, getMethod)
 import Node.Express.Response (sendJson, setStatus)
-import Node.Express.Handler (Handler, next)
+import Node.Express.Handler (HandlerM, Handler, next)
 import Node.Express.Types (Method (POST))
 import Node.Express.Ws (WebSocket, WsReqHandler, getSocket, send, onClose)
 import Simple.JSON (read) as JSON
 import SQLite3 (DBConnection)
 import Effect.Now (now)
+import Control.Monad.Trans.Class (lift)
 import Middleware.Middleware as Middleware
-import Types (RawMsg, Msg, instantToTimestamp, msgToRaw, opSucceded, opFailed)
+import Types (ApplicationM, RawMsg, Msg, instantToTimestamp, msgToRaw, opSucceded, opFailed)
 import Database (prepareDb, sqlGetMessages, sqlInsertMessage)
 
 -- | `Handler` to respond with 400 and the produced error
-errorHandler :: Error -> Handler
+errorHandler :: Error -> ApplicationM HandlerM Unit
 errorHandler err = do
-  setStatus 400
-  sendJson {error: message err}
+  lift $ setStatus 400
+  lift $ sendJson {error: message err}
 
 {-}
 -- | `Handler` which responds with all messages in the database in json format
