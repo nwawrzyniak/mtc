@@ -1,0 +1,60 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Build and Test
+
+on:
+  push:
+    branches: [ master, action ]
+  pull_request:
+    branches: [ master ]
+
+defaults:
+  run:
+    working-directory: node
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [10.x, 11.x, 12.13.x, 12.x, 13.x]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - uses: actions/cache@v1
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-${{ matrix.node-version }}-
+    - name: Install purescript, pulp & bower
+      run: npm install -g purescript pulp bower
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cache/bower/
+        key: ${{ runner.os }}-bower-${{ matrix.node-version }}-${{ hashFiles('**/bower.json') }}
+        restore-keys: |
+          ${{ runner.os }}-bower-${{ matrix.node-version }}-
+    - run: npm ci
+    - run: bower install
+    - run: pulp build
+    - run: pulp browserify -m FrontendMain -O | npx uglifyjs --compress --mangle --toplevel -o static/main.min.js
+    - run: pulp test
+    - uses: actions/upload-artifact@v2
+      with:
+        name: compiled-backend
+        path: node/output/ # or path/to/artifact
+    - uses: actions/upload-artifact@v2
+      with:
+        name: compiled-frontend
+        path: node/static/main.min.js # or path/to/artifact
