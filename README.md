@@ -14,7 +14,7 @@ After cloning this repository you will need to fetch a git submodule. This can b
 git submodule update
 ```
 
-Execute the following commands to build simple-text-html
+Execute the following commands to build mtc:
 ```
 ./install_deps.sh
 ./build.sh
