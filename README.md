@@ -1,7 +1,7 @@
 # mtc (minimal-tor-chat)
 An extremely minimalistic text post server for over-anonymous chatting
 ## Dependencies
-You will need to install the following tools before building simple-text-html
+You will need to install the following tools before building mtc:
 
 - Node.js
 - npm
