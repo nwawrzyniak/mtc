@@ -1,4 +1,4 @@
-# simple-text-html
+# mtc (minimal-tor-chat)
 An extremely minimalistic text post server for over-anonymous chatting
 ## Dependencies
 You will need to install the following tools before building simple-text-html
@@ -43,5 +43,5 @@ To install all (missing) dependencies, rebuild the program and execute it, you c
 ```
 
 ## Annotations
-The simple-text-html server is preconfigured to run only through the "Tor" network.
-If you want to use this server through the clear web or in a local network you should [follow this guide](https://github.com/nwawrzyniak/simple-text-html/wiki/Hosting-a-%22simple-text-html%22-server-reachable-via-the-clear-web).
+The mtc server is preconfigured to run only through the "Tor" network.
+If you want to use this server through the clear web or in a local network you should [follow this guide](https://github.com/nwawrzyniak/mtc/wiki/Hosting-a-%22simple-text-html%22-server-reachable-via-the-clear-web).
