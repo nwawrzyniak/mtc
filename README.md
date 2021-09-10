@@ -14,7 +14,7 @@ After cloning this repository you will need to fetch a git submodule. This can b
 git submodule update
 ```
 
-Execute the following commands to build simple-text-html
+Execute the following commands to build mtc:
 ```
 ./install_deps.sh
 ./build.sh
@@ -44,4 +44,4 @@ To install all (missing) dependencies, rebuild the program and execute it, you c
 
 ## Annotations
 The mtc server is preconfigured to run only through the "Tor" network.
-If you want to use this server through the clear web or in a local network you should [follow this guide](https://github.com/nwawrzyniak/mtc/wiki/Hosting-a-%22simple-text-html%22-server-reachable-via-the-clear-web).
+If you want to use this server through the clear web or in a local network you should [follow this guide](https://github.com/nwawrzyniak/mtc/wiki/Hosting-an-mtc-server-reachable-via-the-clear-web).
