@@ -1,14 +1,14 @@
 {
-  "name": "simple-text-html",
+  "name": "mtc",
   "version": "1.0.0",
-  "description": "Simple text html",
+  "description": "minimal-text-chat. A chat server that avoids the concepts of user accounts and IP adresses logging.",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nwawrzyniak/simple-text-html.git"
+    "url": "https://github.com/nwawrzyniak/mtc.git"
   },
   "dependencies": {
     "express": "~4.19.2",
